@@ -76,27 +76,97 @@ async function ensureThirdPartyModuleEnabled(page: Page) {
     }
   }
 
-  const disableSelectors = [
-    'a[href*="value=modSociete"][href*="action=disable"]',
-    'a[href*="value=modSociete"][href*="action=deactivate"]',
+  const moduleRowSelectors = [
+    '[data-module="modSociete"]',
+    '#module-row-modSociete',
+    'tr[data-module="modSociete"]',
+    'tr[id*="module"][data-key="modSociete"]',
+    'tr:has(a[href*="value=modSociete"])',
+    'tr:has-text("Third parties")',
+    'tr:has-text("Terceros")',
   ];
 
-  for (const selector of disableSelectors) {
-    const disableLink = page.locator(selector).first();
-    if ((await disableLink.count()) > 0) {
-      console.log('✅ El módulo de terceros ya estaba activo.');
+  let moduleRow: ReturnType<Page['locator']> | undefined;
+  for (const selector of moduleRowSelectors) {
+    const candidate = page.locator(selector).first();
+    if ((await candidate.count()) > 0) {
+      moduleRow = candidate;
+      break;
+    }
+  }
+
+  const scopedLocator = (selector: string) =>
+    moduleRow ? moduleRow.locator(selector).first() : page.locator(selector).first();
+
+  const toggleSelectors = [
+    'input[type="checkbox"][data-module="modSociete"]',
+    'input[type="checkbox"][name="module[modSociete]"]',
+    'input[type="checkbox"][name="activate_modSociete"]',
+    'input[type="checkbox"][value="modSociete"]',
+  ];
+
+  async function moduleSeemsEnabled() {
+    const disableSelectors = [
+      'a[href*="value=modSociete"][href*="action=disable"]',
+      'a[href*="value=modSociete"][href*="action=deactivate"]',
+      'button[name="disable"][value*="modSociete"]',
+      'button[data-action="disable"][data-module="modSociete"]',
+      'form[action*="value=modSociete"] button[name="disable"]',
+    ];
+
+    for (const selector of disableSelectors) {
+      const disableLink = scopedLocator(selector);
+      if ((await disableLink.count()) > 0) {
+        return true;
+      }
+    }
+
+    for (const selector of toggleSelectors) {
+      const toggle = scopedLocator(selector);
+      if ((await toggle.count()) > 0 && (await toggle.isChecked().catch(() => false))) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  if (await moduleSeemsEnabled()) {
+    console.log('✅ El módulo de terceros ya estaba activo.');
+    return;
+  }
+
+  for (const selector of toggleSelectors) {
+    const toggle = scopedLocator(selector);
+    if ((await toggle.count()) === 0) continue;
+
+    await expect(
+      toggle,
+      'No encontré el interruptor para activar el módulo de terceros (modSociete).'
+    ).toBeVisible({ timeout: 10000 });
+
+    if (!(await toggle.isChecked().catch(() => false))) {
+      await toggle.check({ force: true });
+      await page.waitForLoadState('networkidle').catch(() => undefined);
+      await page.waitForTimeout(500);
+    }
+
+    if (await moduleSeemsEnabled()) {
+      console.log('✅ Módulo de terceros activado mediante interruptor.');
       return;
     }
   }
 
-  const activationStrategies = [
+  const activationSelectors = [
     'a[href*="value=modSociete"][href*="action=activate"]',
+    'button[name="activate"][value*="modSociete"]',
+    'button[data-action="activate"][data-module="modSociete"]',
     'form[action*="value=modSociete"] button[name="activate"]',
     'form[action*="value=modSociete"] input[type="submit"]',
   ];
 
-  for (const selector of activationStrategies) {
-    const activator = page.locator(selector).first();
+  for (const selector of activationSelectors) {
+    const activator = scopedLocator(selector);
     if ((await activator.count()) === 0) continue;
 
     await expect(
@@ -107,8 +177,58 @@ async function ensureThirdPartyModuleEnabled(page: Page) {
     await activator.click();
     await page.waitForLoadState('networkidle').catch(() => undefined);
     await page.waitForLoadState('domcontentloaded');
-    console.log('✅ Módulo de terceros activado desde la página de configuración.');
-    return;
+
+    if (await moduleSeemsEnabled()) {
+      console.log('✅ Módulo de terceros activado desde la página de configuración.');
+      return;
+    }
+  }
+
+  const token = await page.evaluate(() => {
+    const w = window as typeof window & {
+      MAIN_TOKEN?: string;
+      main_token?: string;
+      token?: string;
+      newtoken?: string;
+    };
+
+    const fromWindow = w.MAIN_TOKEN || w.main_token || w.token || w.newtoken;
+    if (fromWindow) return fromWindow;
+
+    const tokenInput =
+      (document.querySelector('input[name="token"]') as HTMLInputElement | null) ||
+      (document.querySelector('input[name="newtoken"]') as HTMLInputElement | null);
+    if (tokenInput?.value) return tokenInput.value;
+
+    const linkToken = Array.from(document.querySelectorAll('a[href*="modSociete"]'))
+      .map((anchor) => {
+        try {
+          const url = new URL((anchor as HTMLAnchorElement).href, document.baseURI);
+          return url.searchParams.get('token');
+        } catch (error) {
+          return null;
+        }
+      })
+      .find((value) => value);
+
+    return linkToken ?? null;
+  });
+
+  if (token) {
+    console.log('ℹ️ Intentando activar el módulo con token directo.');
+    await page.goto(`/admin/modules.php?action=activate&value=modSociete&token=${token}`);
+    await page.waitForLoadState('networkidle').catch(() => undefined);
+    await page.waitForLoadState('domcontentloaded');
+
+    await page.goto('/admin/modules.php');
+    await page.waitForLoadState('domcontentloaded');
+
+    if (await moduleSeemsEnabled()) {
+      console.log('✅ Módulo de terceros activado mediante petición directa.');
+      return;
+    }
+  } else {
+    console.log('⚠️ No fue posible obtener un token CSRF para activar el módulo directamente.');
   }
 
   throw new Error(
