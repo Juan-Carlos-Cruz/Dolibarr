@@ -55,6 +55,67 @@ async function setCheckboxByLabel(page: Page, re: RegExp, checked: boolean) {
   }
 }
 
+async function ensureThirdPartyModuleEnabled(page: Page) {
+  console.log('ℹ️ Verificando que el módulo de terceros esté activo...');
+
+  await page.goto('/admin/modules.php');
+  await page.waitForLoadState('domcontentloaded');
+
+  const foundationTabSelectors = [
+    'a[href="#modulelistfoundation"]',
+    'button[data-bs-target="#modulelistfoundation"]',
+    'a[data-target="#modulelistfoundation"]',
+  ];
+
+  for (const selector of foundationTabSelectors) {
+    const tab = page.locator(selector).first();
+    if (await tab.isVisible().catch(() => false)) {
+      await tab.click();
+      await page.waitForTimeout(250);
+      break;
+    }
+  }
+
+  const disableSelectors = [
+    'a[href*="value=modSociete"][href*="action=disable"]',
+    'a[href*="value=modSociete"][href*="action=deactivate"]',
+  ];
+
+  for (const selector of disableSelectors) {
+    const disableLink = page.locator(selector).first();
+    if ((await disableLink.count()) > 0) {
+      console.log('✅ El módulo de terceros ya estaba activo.');
+      return;
+    }
+  }
+
+  const activationStrategies = [
+    'a[href*="value=modSociete"][href*="action=activate"]',
+    'form[action*="value=modSociete"] button[name="activate"]',
+    'form[action*="value=modSociete"] input[type="submit"]',
+  ];
+
+  for (const selector of activationStrategies) {
+    const activator = page.locator(selector).first();
+    if ((await activator.count()) === 0) continue;
+
+    await expect(
+      activator,
+      'No encontré un control visible para activar el módulo de terceros (modSociete).'
+    ).toBeVisible({ timeout: 10000 });
+
+    await activator.click();
+    await page.waitForLoadState('networkidle').catch(() => undefined);
+    await page.waitForLoadState('domcontentloaded');
+    console.log('✅ Módulo de terceros activado desde la página de configuración.');
+    return;
+  }
+
+  throw new Error(
+    '❌ No fue posible activar el módulo de terceros. Revisa la página /admin/modules.php para ver si cambió el selector.'
+  );
+}
+
 /**
  * Login robusto:
  * - Usa usuario/clave de variables de entorno si existen.
@@ -116,6 +177,23 @@ async function openCreateThirdPartyForm(page: Page) {
   // 2) Ir a la lista de Terceros
   await page.goto('/societe/list.php?type=0');
   await page.waitForLoadState('domcontentloaded');
+
+  const accessDenied = page
+    .getByText(/Access denied\.?|Acceso denegado/i, { exact: false })
+    .first();
+  if (await accessDenied.isVisible().catch(() => false)) {
+    console.log('⚠️ Acceso denegado al listado de terceros. Intentando activar el módulo...');
+    await ensureThirdPartyModuleEnabled(page);
+
+    await page.goto('/societe/list.php?type=0');
+    await page.waitForLoadState('domcontentloaded');
+
+    if (await accessDenied.isVisible().catch(() => false)) {
+      throw new Error(
+        '❌ Seguimos sin acceso al listado de terceros incluso después de intentar activar el módulo.'
+      );
+    }
+  }
 
   // 3) Localizar botón/enlace "Nuevo tercero"
   let newThird = page

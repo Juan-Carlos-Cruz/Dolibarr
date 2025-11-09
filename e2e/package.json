@@ -5,7 +5,8 @@
   "scripts": {
     "deps": "npm i -D @playwright/test@1.56.0 allure-playwright allure-commandline && npx playwright install --with-deps",
     "test:setup": "npx playwright test tests/setup/auth.setup.spec.ts",
-    "test:e2e": "npx playwright test",
+    "test": "npx playwright test",
+    "test:e2e": "npm run test",
     "report:allure": "npx allure generate report/allure-results -o report/allure-report --clean"
   },
   "devDependencies": {
