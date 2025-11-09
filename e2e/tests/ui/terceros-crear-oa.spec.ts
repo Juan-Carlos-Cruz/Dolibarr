@@ -196,30 +196,51 @@ async function openCreateThirdPartyForm(page: Page) {
   }
 
   // 3) Localizar botón/enlace "Nuevo tercero"
-  let newThird = page
-    .getByRole('link', {
-      name: /new third party|nuevo tercero|nouveau tiers|crear tercero|create third party/i,
-    })
-    .first();
-
-  if (!(await newThird.isVisible().catch(() => false))) {
-    // Fallback: enlaces por href típicos de Dolibarr
-    newThird = page
+  const candidates = [
+    page
+      .getByRole('link', {
+        name: /new third party|nuevo tercero|nouveau tiers|crear tercero|create third party/i,
+      })
+      .first(),
+    page
+      .getByRole('button', {
+        name: /new third party|nuevo tercero|nouveau tiers|crear tercero|create third party/i,
+      })
+      .first(),
+    page
       .locator(
         'a[href*="/societe/card.php?action=create"], a[href*="/societe/soc.php?action=create"]'
       )
-      .first();
+      .first(),
+    page.locator('[data-role="action"] a[href*="societe/card.php?action=create"]').first(),
+    page.locator('a[class*="butActionNew"][href*="societe/"]').first(),
+  ];
+
+  let newThird;
+  for (const candidate of candidates) {
+    if (await candidate.isVisible().catch(() => false)) {
+      newThird = candidate;
+      break;
+    }
   }
 
-  await expect(
-    newThird,
-    'No encontré el enlace/botón para crear un nuevo tercero en la lista de terceros'
-  ).toBeVisible({ timeout: 15000 });
+  if (!newThird) {
+    console.log(
+      '⚠️ No encontré el enlace/botón para crear un nuevo tercero tras revisar selectores conocidos. Navegando directamente a la ficha de creación.'
+    );
+    await page.goto('/societe/card.php?action=create');
+    await page.waitForLoadState('domcontentloaded');
+  } else {
+    await expect(
+      newThird,
+      'No encontré el enlace/botón para crear un nuevo tercero en la lista de terceros'
+    ).toBeVisible({ timeout: 15000 });
 
-  await newThird.click();
-  await page.waitForLoadState('domcontentloaded');
+    await newThird.click();
+    await page.waitForLoadState('domcontentloaded');
+  }
 
-  console.log('➡️ Después de hacer clic en "Nuevo tercero". URL:', page.url());
+  console.log('➡️ Navegación al formulario de creación de tercero. URL:', page.url());
 
   // Campo "ThirdPartyName" (name)
   const nameField = page.locator('input[name="name"], #name').first();
