@@ -55,6 +55,187 @@ async function setCheckboxByLabel(page: Page, re: RegExp, checked: boolean) {
   }
 }
 
+async function ensureThirdPartyModuleEnabled(page: Page) {
+  console.log('ℹ️ Verificando que el módulo de terceros esté activo...');
+
+  await page.goto('/admin/modules.php');
+  await page.waitForLoadState('domcontentloaded');
+
+  const foundationTabSelectors = [
+    'a[href="#modulelistfoundation"]',
+    'button[data-bs-target="#modulelistfoundation"]',
+    'a[data-target="#modulelistfoundation"]',
+  ];
+
+  for (const selector of foundationTabSelectors) {
+    const tab = page.locator(selector).first();
+    if (await tab.isVisible().catch(() => false)) {
+      await tab.click();
+      await page.waitForTimeout(250);
+      break;
+    }
+  }
+
+  const moduleRowSelectors = [
+    '[data-module="modSociete"]',
+    '#module-row-modSociete',
+    'tr[data-module="modSociete"]',
+    'tr[id*="module"][data-key="modSociete"]',
+    'tr:has(a[href*="value=modSociete"])',
+    'tr:has-text("Third parties")',
+    'tr:has-text("Terceros")',
+  ];
+
+  let moduleRow: ReturnType<Page['locator']> | undefined;
+  for (const selector of moduleRowSelectors) {
+    const candidate = page.locator(selector).first();
+    if ((await candidate.count()) > 0) {
+      moduleRow = candidate;
+      break;
+    }
+  }
+
+  const scopedLocator = (selector: string) =>
+    moduleRow ? moduleRow.locator(selector).first() : page.locator(selector).first();
+
+  const toggleSelectors = [
+    'input[type="checkbox"][data-module="modSociete"]',
+    'input[type="checkbox"][name="module[modSociete]"]',
+    'input[type="checkbox"][name="activate_modSociete"]',
+    'input[type="checkbox"][value="modSociete"]',
+  ];
+
+  async function moduleSeemsEnabled() {
+    const disableSelectors = [
+      'a[href*="value=modSociete"][href*="action=disable"]',
+      'a[href*="value=modSociete"][href*="action=deactivate"]',
+      'button[name="disable"][value*="modSociete"]',
+      'button[data-action="disable"][data-module="modSociete"]',
+      'form[action*="value=modSociete"] button[name="disable"]',
+    ];
+
+    for (const selector of disableSelectors) {
+      const disableLink = scopedLocator(selector);
+      if ((await disableLink.count()) > 0) {
+        return true;
+      }
+    }
+
+    for (const selector of toggleSelectors) {
+      const toggle = scopedLocator(selector);
+      if ((await toggle.count()) > 0 && (await toggle.isChecked().catch(() => false))) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  if (await moduleSeemsEnabled()) {
+    console.log('✅ El módulo de terceros ya estaba activo.');
+    return;
+  }
+
+  for (const selector of toggleSelectors) {
+    const toggle = scopedLocator(selector);
+    if ((await toggle.count()) === 0) continue;
+
+    await expect(
+      toggle,
+      'No encontré el interruptor para activar el módulo de terceros (modSociete).'
+    ).toBeVisible({ timeout: 10000 });
+
+    if (!(await toggle.isChecked().catch(() => false))) {
+      await toggle.check({ force: true });
+      await page.waitForLoadState('networkidle').catch(() => undefined);
+      await page.waitForTimeout(500);
+    }
+
+    if (await moduleSeemsEnabled()) {
+      console.log('✅ Módulo de terceros activado mediante interruptor.');
+      return;
+    }
+  }
+
+  const activationSelectors = [
+    'a[href*="value=modSociete"][href*="action=activate"]',
+    'button[name="activate"][value*="modSociete"]',
+    'button[data-action="activate"][data-module="modSociete"]',
+    'form[action*="value=modSociete"] button[name="activate"]',
+    'form[action*="value=modSociete"] input[type="submit"]',
+  ];
+
+  for (const selector of activationSelectors) {
+    const activator = scopedLocator(selector);
+    if ((await activator.count()) === 0) continue;
+
+    await expect(
+      activator,
+      'No encontré un control visible para activar el módulo de terceros (modSociete).'
+    ).toBeVisible({ timeout: 10000 });
+
+    await activator.click();
+    await page.waitForLoadState('networkidle').catch(() => undefined);
+    await page.waitForLoadState('domcontentloaded');
+
+    if (await moduleSeemsEnabled()) {
+      console.log('✅ Módulo de terceros activado desde la página de configuración.');
+      return;
+    }
+  }
+
+  const token = await page.evaluate(() => {
+    const w = window as typeof window & {
+      MAIN_TOKEN?: string;
+      main_token?: string;
+      token?: string;
+      newtoken?: string;
+    };
+
+    const fromWindow = w.MAIN_TOKEN || w.main_token || w.token || w.newtoken;
+    if (fromWindow) return fromWindow;
+
+    const tokenInput =
+      (document.querySelector('input[name="token"]') as HTMLInputElement | null) ||
+      (document.querySelector('input[name="newtoken"]') as HTMLInputElement | null);
+    if (tokenInput?.value) return tokenInput.value;
+
+    const linkToken = Array.from(document.querySelectorAll('a[href*="modSociete"]'))
+      .map((anchor) => {
+        try {
+          const url = new URL((anchor as HTMLAnchorElement).href, document.baseURI);
+          return url.searchParams.get('token');
+        } catch (error) {
+          return null;
+        }
+      })
+      .find((value) => value);
+
+    return linkToken ?? null;
+  });
+
+  if (token) {
+    console.log('ℹ️ Intentando activar el módulo con token directo.');
+    await page.goto(`/admin/modules.php?action=activate&value=modSociete&token=${token}`);
+    await page.waitForLoadState('networkidle').catch(() => undefined);
+    await page.waitForLoadState('domcontentloaded');
+
+    await page.goto('/admin/modules.php');
+    await page.waitForLoadState('domcontentloaded');
+
+    if (await moduleSeemsEnabled()) {
+      console.log('✅ Módulo de terceros activado mediante petición directa.');
+      return;
+    }
+  } else {
+    console.log('⚠️ No fue posible obtener un token CSRF para activar el módulo directamente.');
+  }
+
+  throw new Error(
+    '❌ No fue posible activar el módulo de terceros. Revisa la página /admin/modules.php para ver si cambió el selector.'
+  );
+}
+
 /**
  * Login robusto:
  * - Usa usuario/clave de variables de entorno si existen.
@@ -117,31 +298,69 @@ async function openCreateThirdPartyForm(page: Page) {
   await page.goto('/societe/list.php?type=0');
   await page.waitForLoadState('domcontentloaded');
 
-  // 3) Localizar botón/enlace "Nuevo tercero"
-  let newThird = page
-    .getByRole('link', {
-      name: /new third party|nuevo tercero|nouveau tiers|crear tercero|create third party/i,
-    })
+  const accessDenied = page
+    .getByText(/Access denied\.?|Acceso denegado/i, { exact: false })
     .first();
+  if (await accessDenied.isVisible().catch(() => false)) {
+    console.log('⚠️ Acceso denegado al listado de terceros. Intentando activar el módulo...');
+    await ensureThirdPartyModuleEnabled(page);
 
-  if (!(await newThird.isVisible().catch(() => false))) {
-    // Fallback: enlaces por href típicos de Dolibarr
-    newThird = page
+    await page.goto('/societe/list.php?type=0');
+    await page.waitForLoadState('domcontentloaded');
+
+    if (await accessDenied.isVisible().catch(() => false)) {
+      throw new Error(
+        '❌ Seguimos sin acceso al listado de terceros incluso después de intentar activar el módulo.'
+      );
+    }
+  }
+
+  // 3) Localizar botón/enlace "Nuevo tercero"
+  const candidates = [
+    page
+      .getByRole('link', {
+        name: /new third party|nuevo tercero|nouveau tiers|crear tercero|create third party/i,
+      })
+      .first(),
+    page
+      .getByRole('button', {
+        name: /new third party|nuevo tercero|nouveau tiers|crear tercero|create third party/i,
+      })
+      .first(),
+    page
       .locator(
         'a[href*="/societe/card.php?action=create"], a[href*="/societe/soc.php?action=create"]'
       )
-      .first();
+      .first(),
+    page.locator('[data-role="action"] a[href*="societe/card.php?action=create"]').first(),
+    page.locator('a[class*="butActionNew"][href*="societe/"]').first(),
+  ];
+
+  let newThird;
+  for (const candidate of candidates) {
+    if (await candidate.isVisible().catch(() => false)) {
+      newThird = candidate;
+      break;
+    }
   }
 
-  await expect(
-    newThird,
-    'No encontré el enlace/botón para crear un nuevo tercero en la lista de terceros'
-  ).toBeVisible({ timeout: 15000 });
+  if (!newThird) {
+    console.log(
+      '⚠️ No encontré el enlace/botón para crear un nuevo tercero tras revisar selectores conocidos. Navegando directamente a la ficha de creación.'
+    );
+    await page.goto('/societe/card.php?action=create');
+    await page.waitForLoadState('domcontentloaded');
+  } else {
+    await expect(
+      newThird,
+      'No encontré el enlace/botón para crear un nuevo tercero en la lista de terceros'
+    ).toBeVisible({ timeout: 15000 });
 
-  await newThird.click();
-  await page.waitForLoadState('domcontentloaded');
+    await newThird.click();
+    await page.waitForLoadState('domcontentloaded');
+  }
 
-  console.log('➡️ Después de hacer clic en "Nuevo tercero". URL:', page.url());
+  console.log('➡️ Navegación al formulario de creación de tercero. URL:', page.url());
 
   // Campo "ThirdPartyName" (name)
   const nameField = page.locator('input[name="name"], #name').first();
