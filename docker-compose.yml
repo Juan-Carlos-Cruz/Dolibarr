@@ -1,4 +1,3 @@
-
 services:
   db:
     image: mariadb:10.11
@@ -27,26 +26,28 @@ services:
       - ./dolibarr-custom:/var/www/html/custom
       - shared_allure_report:/var/www/html/custom/qa/reports
 
-  e2e:
-    image: mcr.microsoft.com/playwright:v1.56.0-jammy
-    working_dir: /work
+  functional-tests:
+    build:
+      context: ./qa/functional
     depends_on: [dolibarr]
+    working_dir: /workspace/selenium
     environment:
-      BASE_URL: "http://dolibarr:80"
+      BASE_URL: "http://dolibarr"
       DOLI_USER: "admin"
       DOLI_PASS: "admin"
+      SELENIUM_HEADLESS: "true"
     volumes:
-      - ./e2e:/work
-      - allure_results:/work/report/allure-results
-      - shared_allure_report:/work/report/allure-report
-    command: |
-      bash -c "
-        apt-get update &&
-        apt-get install -y openjdk-11-jdk &&
-        export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 &&
-        export PATH=$$PATH:$$JAVA_HOME/bin &&
-        tail -f /dev/null
-      "
+      - ./qa/functional/selenium:/workspace/selenium
+      - allure_results:/workspace/selenium/reports/allure-results
+      - shared_allure_report:/workspace/selenium/reports/allure-report
+    command: ["tail", "-f", "/dev/null"]
+
+  phpunit:
+    image: composer:2
+    working_dir: /workspace/unit
+    volumes:
+      - ./qa/unit:/workspace/unit
+    command: ["tail", "-f", "/dev/null"]
 
   allure:
     image: frankescobar/allure-docker-service
