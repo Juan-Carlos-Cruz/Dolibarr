@@ -1,10 +1,10 @@
 /**
  * PRUEBAS ORTOGONALES L9(3⁴) - VERSIÓN FUNCIONAL INMEDIATA
- * Muestra Chrome + Todos los resultados en terminal
+ * Muestra Microsoft Edge + Todos los resultados en terminal
  */
 
 const { Builder, By, until } = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
+const edge = require('selenium-webdriver/edge');
 const path = require('path');
 const fs = require('fs-extra');
 
@@ -12,6 +12,69 @@ class WorkingOrthogonalTests {
     constructor() {
         this.driver = null;
         this.results = [];
+    }
+
+    async ensureModuleEnabled(moduleIdentifiers = []) {
+        try {
+            if (!Array.isArray(moduleIdentifiers) || moduleIdentifiers.length === 0) {
+                return;
+            }
+
+            for (const identifier of moduleIdentifiers) {
+                const searchUrl = `http://localhost:8080/admin/modules.php?mode=search&search=${identifier}`;
+                console.log(`🔍 Comprobando módulo "${identifier}" en ${searchUrl}`);
+
+                await this.driver.get(searchUrl);
+                await this.driver.sleep(2000);
+
+                const disableSelectors = [
+                    `a[href*="module=${identifier}"][href*="action=disable"]`,
+                    `form[action*="module=${identifier}"] input[name="action"][value="disable"]`
+                ];
+
+                let alreadyEnabled = false;
+                for (const selector of disableSelectors) {
+                    const elements = await this.driver.findElements(By.css(selector));
+                    if (elements.length > 0) {
+                        alreadyEnabled = true;
+                        break;
+                    }
+                }
+
+                if (alreadyEnabled) {
+                    console.log(`✅ Módulo "${identifier}" ya estaba activo`);
+                    continue;
+                }
+
+                console.log(`⚙️ Intentando activar módulo "${identifier}"...`);
+                const activateSelectors = [
+                    `a[href*="module=${identifier}"][href*="action=activate"]`,
+                    `form[action*="module=${identifier}"] input[type="submit"]`,
+                    'input[type="submit"][value*="Activar"]',
+                    'input[type="submit"][value*="Enable"]',
+                    'button[data-action="activate"]'
+                ];
+
+                for (const selector of activateSelectors) {
+                    const elements = await this.driver.findElements(By.css(selector));
+                    if (elements.length > 0) {
+                        await elements[0].click();
+                        await this.driver.sleep(2000);
+                        console.log(`✅ Activación solicitada para módulo "${identifier}"`);
+                        break;
+                    }
+                }
+            }
+
+            await this.driver.get('http://localhost:8080/index.php');
+            await this.driver.sleep(1000);
+        } catch (error) {
+            console.log(`⚠️ Error asegurando módulos: ${error.message}`);
+        }
+    }
+
+    async ensureProjectModuleEnabled() {
+        await this.ensureModuleEnabled(['project', 'projet']);
     }
 
     // Casos de prueba L9(3⁴)
@@ -66,18 +129,24 @@ class WorkingOrthogonalTests {
     }
 
     async setupDriver() {
-        console.log('🚀 Configurando Chrome (se abrirá AHORA)...');
-        
-        const options = new chrome.Options();
-        // Chrome visible para que veas todo el proceso
+        console.log('🚀 Configurando Microsoft Edge (se abrirá AHORA)...');
+
+        const options = new edge.Options();
+        // Edge visible para que veas todo el proceso
         options.addArguments('--disable-web-security');
         options.addArguments('--no-sandbox');
         options.addArguments('--disable-dev-shm-usage');
         options.addArguments('--window-size=1200,900');
 
+        const driverPath = process.env.MSEDGEDRIVER_PATH || process.env.EDGE_DRIVER_PATH || null;
+        const serviceBuilder = driverPath
+            ? new edge.ServiceBuilder(driverPath)
+            : new edge.ServiceBuilder();
+
         this.driver = await new Builder()
-            .forBrowser('chrome')
-            .setChromeOptions(options)
+            .forBrowser('MicrosoftEdge')
+            .setEdgeOptions(options)
+            .setEdgeService(serviceBuilder)
             .build();
 
         // Timeouts rápidos
@@ -87,7 +156,7 @@ class WorkingOrthogonalTests {
             script: 5000
         });
 
-        console.log('✅ Chrome abierto y listo');
+        console.log('✅ Microsoft Edge abierto y listo');
         return this.driver;
     }
 
@@ -106,12 +175,14 @@ class WorkingOrthogonalTests {
         
         await username.sendKeys('admin');
         await password.sendKeys('admin');
-        
+
         const loginBtn = await this.driver.findElement(By.css('input[type="submit"]'));
         await loginBtn.click();
-        
+
         console.log('✅ Login completado');
         await this.driver.sleep(3000);
+
+        await this.ensureProjectModuleEnabled();
     }
 
     async takeScreenshot(name) {
@@ -181,13 +252,25 @@ class WorkingOrthogonalTests {
                 
                 console.log(`\n⚡ EJECUTANDO...`);
                 const startTime = Date.now();
-                
+
                 // Navegación real al formulario
                 console.log(`   🧭 Navegando al formulario de nueva tarea...`);
                 await this.driver.get('http://localhost:8080/projet/tasks.php?leftmenu=tasks&action=create');
                 console.log(`   ⏳ Esperando que cargue el formulario...`);
                 await this.driver.sleep(3000);
-                
+
+                const errorContainers = await this.driver.findElements(By.css('.error, .errorbox, .errorboxtext, .errorbg, .errorcell, .errormsg'));
+                for (const container of errorContainers) {
+                    const text = (await container.getText()).toLowerCase();
+                    if (text.includes('acceso denegado') || text.includes('access denied')) {
+                        console.log('   🚫 Acceso denegado detectado. Activando módulo de proyectos...');
+                        await this.ensureProjectModuleEnabled();
+                        await this.driver.get('http://localhost:8080/projet/tasks.php?leftmenu=tasks&action=create');
+                        await this.driver.sleep(3000);
+                        break;
+                    }
+                }
+
                 console.log(`   📸 Capturando estado inicial del formulario...`);
                 const beforeScreenshot = await this.takeScreenshot(`${testCase.name}_before`);
                 
@@ -466,7 +549,7 @@ class WorkingOrthogonalTests {
             console.error('❌ Error en ejecución:', error.message);
         } finally {
             if (this.driver) {
-                console.log('\n🔚 Cerrando Chrome...');
+                console.log('\n🔚 Cerrando Microsoft Edge...');
                 await this.driver.quit();
             }
         }

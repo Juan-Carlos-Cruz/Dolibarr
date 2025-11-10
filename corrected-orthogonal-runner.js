@@ -1,15 +1,14 @@
 /**
  * ARREGLO ORTOGONAL L9(3⁴) CORREGIDO CON AMBOS CAMPOS OBLIGATORIOS
- * 
+ *
  * CAMPOS OBLIGATORIOS CONFIRMADOS:
  * - Etiqueta (Label): Campo de texto obligatorio
  * - Hilo de la tarea (Task Parent): SELECT obligatorio
- * 
+ *
  * Esto cambia completamente qué casos deben ser válidos vs no válidos
  */
 
-const { Builder, By, until } = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
+const { By, until } = require('selenium-webdriver');
 
 class CorrectedOrthogonalTestRunner {
     constructor() {
