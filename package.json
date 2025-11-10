@@ -1,24 +1,24 @@
 {
   "name": "dolibarr-orthogonal-testing",
   "version": "1.0.0",
-  "description": "Pruebas de caja negra con arreglos ortogonales para el módulo de tareas de Dolibarr usando Selenium WebDriver",
+  "description": "Suite de pruebas funcionales de productos en Dolibarr con Selenium WebDriver, captura de video y evidencia",
   "main": "index.js",
   "scripts": {
-    "test": "node working-orthogonal-test.js",
-    "start": "node corrected-orthogonal-runner.js",
-    "verify": "node verify-compatibility.js",
+    "test": "node tests/product-functional-suite.js",
+    "start": "node tests/product-functional-suite.js",
     "docker-up": "docker-compose up -d",
     "docker-down": "docker-compose down",
     "docker-logs": "docker-compose logs -f",
-    "setup": "npm install && npm run docker-up && echo 'Esperando 30 segundos...' && timeout 30 && npm run verify",
+    "setup": "npm install && npm run docker-up && echo 'Esperando 30 segundos...' && sleep 30 && npm test",
     "clean": "docker-compose down -v && docker system prune -f"
   },
   "keywords": [
     "selenium",
     "dolibarr",
-    "orthogonal-arrays",
+    "functional-testing",
     "black-box-testing",
-    "automated-testing"
+    "video-recording",
+    "edge-webdriver"
   ],
   "author": "",
   "license": "MIT",
