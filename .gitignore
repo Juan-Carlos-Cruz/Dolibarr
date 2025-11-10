@@ -60,9 +60,8 @@ docker-volumes/
 # Reports legacy
 reports/screenshots/*
 
-# Functional test artifacts
+# Functional test screenshots
 screenshots/
-videos/
 
 # Logs
 logs/

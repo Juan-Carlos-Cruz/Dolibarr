@@ -7,7 +7,6 @@ Automatización de pruebas funcionales para Dolibarr ERP utilizando Selenium Web
 - Node.js 18+
 - Docker y Docker Compose (para desplegar Dolibarr con la imagen `dolibarr/dolibarr:latest`)
 - Microsoft Edge y su WebDriver (`msedgedriver`) disponible en `PATH` o configurado mediante `MSEDGEDRIVER_PATH` / `EDGE_DRIVER_PATH`
-- `ffmpeg` instalado en el sistema (puedes definir `FFMPEG_PATH` si no está en el `PATH`) y un servidor X11/Xvfb disponible para la captura de vídeo. En Windows asegúrate de que `ffmpeg.exe` esté en el `PATH` (verificado con `where ffmpeg`) o indica su ruta explícita mediante `FFMPEG_PATH`.
 
 ## Instalación
 
@@ -28,7 +27,7 @@ docker-compose up -d
 - `DOLIBARR_BASE_URL`: URL base de Dolibarr (por defecto `http://localhost:8080`).
 - `DOLIBARR_ADMIN_USER` y `DOLIBARR_ADMIN_PASSWORD`: credenciales de administración.
 - `MSEDGEDRIVER_PATH` o `EDGE_DRIVER_PATH`: ruta al ejecutable de Edge WebDriver si no está en `PATH`.
-- `SCREENSHOT_DIR`, `VIDEO_DIR`, `VIDEO_RESOLUTION`, `VIDEO_FRAMERATE`, `DISPLAY`: personalización de artefactos multimedia.
+- `SCREENSHOT_DIR`: directorio donde se almacenan las capturas de pantalla generadas automáticamente.
 
 ## Estructura principal
 
@@ -37,7 +36,7 @@ config/
   testConfig.js        # Configuración general y rutas de artefactos
 src/
   pages/               # Page Objects para cada módulo de Dolibarr
-  utils/               # Driver factory, gestión multimedia y orquestador de pruebas
+  utils/               # Driver factory, utilidades y orquestador de pruebas
 tests/
   functional/          # Casos PF-001 ... PF-012
   resources/           # Datos auxiliares (ej. sample.pdf)
@@ -50,13 +49,13 @@ tests/
 npm test
 ```
 
-> **Nota:** las pruebas generan automáticamente capturas en `screenshots/` y vídeos en `videos/` con la convención `PF-XXX_ok_TIMESTAMP.png` y `PF-XXX.mp4`.
+> **Nota:** las pruebas generan automáticamente capturas en `screenshots/` con la convención `PF-XXX_ok_TIMESTAMP.png` o `PF-XXX_error_TIMESTAMP.png` según el resultado de cada caso.
 
-## Grabación de vídeo y capturas
+## Capturas de pantalla
 
-- Cada prueba inicia un proceso de captura mediante `ffmpeg` (usando el binario definido en `FFMPEG_PATH` o detectado automáticamente).
-- Es necesario contar con un servidor X11/Xvfb disponible (por defecto se usa `DISPLAY=:99`).
-- Los screenshots se guardan al finalizar la prueba, tanto en caso de éxito como de fallo.
+- Cada prueba guarda una captura final, diferenciando éxito (`ok`) o fallo (`error`).
+- Puedes personalizar el directorio de salida mediante la variable `SCREENSHOT_DIR`.
+- En caso de error dentro del flujo de prueba, la captura se toma inmediatamente antes de propagar la excepción para facilitar el análisis.
 
 ## Cobertura de la MRP
 
