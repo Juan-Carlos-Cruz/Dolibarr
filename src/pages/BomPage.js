@@ -16,7 +16,7 @@ class BomPage extends BasePage {
   }
 
   async openList() {
-    await this.visit('/bom/list.php');
+    await this.visit('/bom/bom_list.php');
     await this.waitForVisible(this.createBomButton);
   }
 
