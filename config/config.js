@@ -16,6 +16,7 @@ module.exports = {
         implicitWait: 10000,
         pageLoadTimeout: 30000,
         scriptTimeout: 30000,
+        driverPath: process.env.MSEDGEDRIVER_PATH || process.env.EDGE_DRIVER_PATH || null,
         windowSize: {
             width: 1366,
             height: 768

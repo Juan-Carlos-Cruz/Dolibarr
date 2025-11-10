@@ -37,7 +37,8 @@ npm run docker-up
 
 - Node.js 18+
 
-- Chrome/Chromium- 100% de precisión en predicción de casos (9/9)Implementación exitosa de **Arreglos Ortogonales L9(3⁴)** para optimización de pruebas automatizadas black-box en Dolibarr ERP, logrando **89% reducción en casos de prueba** con **100% de precisión**.
+- Microsoft Edge- 100% de precisión en predicción de casos (9/9)Implementación exitosa de **Arreglos Ortogonales L9(3⁴)** para optimización de pruebas automatizadas black-box en Dolibarr ERP, logrando **89% reducción en casos de prueba** con **100% de precisión**.
+- Edge WebDriver (`msedgedriver`) disponible en el `PATH` del sistema o configurado mediante las variables de entorno `MSEDGEDRIVER_PATH` / `EDGE_DRIVER_PATH`.
 
 
 

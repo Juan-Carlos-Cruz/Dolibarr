@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node working-orthogonal-test.js",
-    "start": "node corrected-orthogonal-runner.js", 
+    "start": "node corrected-orthogonal-runner.js",
     "verify": "node verify-compatibility.js",
     "docker-up": "docker-compose up -d",
     "docker-down": "docker-compose down",
@@ -23,10 +23,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "selenium-webdriver": "^4.15.0",
-    "chromedriver": "^119.0.1",
+    "chalk": "^4.1.2",
     "fs-extra": "^11.1.1",
-    "chalk": "^4.1.2"
+    "selenium-webdriver": "^4.15.0"
   },
   "devDependencies": {
     "jest": "^29.7.0"
