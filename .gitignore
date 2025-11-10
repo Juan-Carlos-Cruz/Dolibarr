@@ -57,9 +57,12 @@ temp-test-file
 # Docker volumes
 docker-volumes/
 
-# Screenshots (keep only final execution)
+# Reports legacy
 reports/screenshots/*
-!reports/screenshots/TC*_2025-10-14T19-*
+
+# Functional test artifacts
+screenshots/
+videos/
 
 # Logs
 logs/
