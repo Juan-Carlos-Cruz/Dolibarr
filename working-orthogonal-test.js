@@ -14,6 +14,69 @@ class WorkingOrthogonalTests {
         this.results = [];
     }
 
+    async ensureModuleEnabled(moduleIdentifiers = []) {
+        try {
+            if (!Array.isArray(moduleIdentifiers) || moduleIdentifiers.length === 0) {
+                return;
+            }
+
+            for (const identifier of moduleIdentifiers) {
+                const searchUrl = `http://localhost:8080/admin/modules.php?mode=search&search=${identifier}`;
+                console.log(`🔍 Comprobando módulo "${identifier}" en ${searchUrl}`);
+
+                await this.driver.get(searchUrl);
+                await this.driver.sleep(2000);
+
+                const disableSelectors = [
+                    `a[href*="module=${identifier}"][href*="action=disable"]`,
+                    `form[action*="module=${identifier}"] input[name="action"][value="disable"]`
+                ];
+
+                let alreadyEnabled = false;
+                for (const selector of disableSelectors) {
+                    const elements = await this.driver.findElements(By.css(selector));
+                    if (elements.length > 0) {
+                        alreadyEnabled = true;
+                        break;
+                    }
+                }
+
+                if (alreadyEnabled) {
+                    console.log(`✅ Módulo "${identifier}" ya estaba activo`);
+                    continue;
+                }
+
+                console.log(`⚙️ Intentando activar módulo "${identifier}"...`);
+                const activateSelectors = [
+                    `a[href*="module=${identifier}"][href*="action=activate"]`,
+                    `form[action*="module=${identifier}"] input[type="submit"]`,
+                    'input[type="submit"][value*="Activar"]',
+                    'input[type="submit"][value*="Enable"]',
+                    'button[data-action="activate"]'
+                ];
+
+                for (const selector of activateSelectors) {
+                    const elements = await this.driver.findElements(By.css(selector));
+                    if (elements.length > 0) {
+                        await elements[0].click();
+                        await this.driver.sleep(2000);
+                        console.log(`✅ Activación solicitada para módulo "${identifier}"`);
+                        break;
+                    }
+                }
+            }
+
+            await this.driver.get('http://localhost:8080/index.php');
+            await this.driver.sleep(1000);
+        } catch (error) {
+            console.log(`⚠️ Error asegurando módulos: ${error.message}`);
+        }
+    }
+
+    async ensureProjectModuleEnabled() {
+        await this.ensureModuleEnabled(['project', 'projet']);
+    }
+
     // Casos de prueba L9(3⁴)
     getTestCases() {
         return [
@@ -112,12 +175,14 @@ class WorkingOrthogonalTests {
         
         await username.sendKeys('admin');
         await password.sendKeys('admin');
-        
+
         const loginBtn = await this.driver.findElement(By.css('input[type="submit"]'));
         await loginBtn.click();
-        
+
         console.log('✅ Login completado');
         await this.driver.sleep(3000);
+
+        await this.ensureProjectModuleEnabled();
     }
 
     async takeScreenshot(name) {
@@ -187,13 +252,25 @@ class WorkingOrthogonalTests {
                 
                 console.log(`\n⚡ EJECUTANDO...`);
                 const startTime = Date.now();
-                
+
                 // Navegación real al formulario
                 console.log(`   🧭 Navegando al formulario de nueva tarea...`);
                 await this.driver.get('http://localhost:8080/projet/tasks.php?leftmenu=tasks&action=create');
                 console.log(`   ⏳ Esperando que cargue el formulario...`);
                 await this.driver.sleep(3000);
-                
+
+                const errorContainers = await this.driver.findElements(By.css('.error, .errorbox, .errorboxtext, .errorbg, .errorcell, .errormsg'));
+                for (const container of errorContainers) {
+                    const text = (await container.getText()).toLowerCase();
+                    if (text.includes('acceso denegado') || text.includes('access denied')) {
+                        console.log('   🚫 Acceso denegado detectado. Activando módulo de proyectos...');
+                        await this.ensureProjectModuleEnabled();
+                        await this.driver.get('http://localhost:8080/projet/tasks.php?leftmenu=tasks&action=create');
+                        await this.driver.sleep(3000);
+                        break;
+                    }
+                }
+
                 console.log(`   📸 Capturando estado inicial del formulario...`);
                 const beforeScreenshot = await this.takeScreenshot(`${testCase.name}_before`);
                 
