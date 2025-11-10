@@ -155,10 +155,7 @@ class BaseTest {
                 console.log('🔧 Intentando completar configuración automáticamente...');
                 await this.completeDolibarrSetup();
             }
-
-            // Asegurar módulos esenciales
-            await this.ensureProjectModuleEnabled();
-
+            
             console.log('✓ Login exitoso en Dolibarr');
             return true;
         } catch (error) {
@@ -174,94 +171,30 @@ class BaseTest {
     async completeDolibarrSetup() {
         try {
             console.log('🛠️ Completando configuración de Dolibarr...');
-            await this.ensureProjectModuleEnabled();
+            
+            // Ir a la página de módulos
+            await this.driver.get(`${this.config.dolibarr.url}/admin/modules.php`);
+            await this.driver.sleep(2000);
+            
+            // Buscar y activar el módulo de Proyectos
+            try {
+                const projectModuleButton = await this.driver.findElement(
+                    By.xpath("//input[@type='submit' and contains(@onclick, 'projet')]")
+                );
+                await projectModuleButton.click();
+                console.log('✓ Módulo de Proyectos activado');
+                await this.driver.sleep(2000);
+            } catch (error) {
+                console.log('⚠️ Módulo de Proyectos ya activado o no encontrado');
+            }
+            
+            // Regresar al dashboard principal
+            await this.driver.get(`${this.config.dolibarr.url}/index.php`);
+            await this.driver.sleep(2000);
+            
         } catch (error) {
             console.log('⚠️ Error en configuración automática:', error.message);
         }
-    }
-
-    /**
-     * Verifica y activa un módulo específico de Dolibarr
-     * @param {string[]} moduleIdentifiers - Identificadores posibles del módulo (project/projet)
-     */
-    async ensureModuleEnabled(moduleIdentifiers = []) {
-        try {
-            if (!Array.isArray(moduleIdentifiers) || moduleIdentifiers.length === 0) {
-                return;
-            }
-
-            console.log(`🧩 Verificando módulos: ${moduleIdentifiers.join(', ')}`);
-
-            for (const identifier of moduleIdentifiers) {
-                const searchUrl = `${this.config.dolibarr.url}/admin/modules.php?mode=search&search=${identifier}`;
-                console.log(`🔍 Revisando módulo "${identifier}" en ${searchUrl}`);
-
-                await this.driver.get(searchUrl);
-                await this.driver.sleep(2000);
-
-                const disableSelectors = [
-                    `a[href*="module=${identifier}"][href*="action=disable"]`,
-                    `form[action*="module=${identifier}"] input[name="action"][value="disable"]`
-                ];
-
-                let moduleEnabled = false;
-
-                for (const selector of disableSelectors) {
-                    const disableLinks = await this.driver.findElements(By.css(selector));
-                    if (disableLinks.length > 0) {
-                        moduleEnabled = true;
-                        break;
-                    }
-                }
-
-                if (moduleEnabled) {
-                    console.log(`✓ Módulo "${identifier}" ya estaba habilitado`);
-                    continue;
-                }
-
-                console.log(`⚙️ Módulo "${identifier}" deshabilitado. Intentando activarlo...`);
-
-                const activateSelectors = [
-                    `a[href*="module=${identifier}"][href*="action=activate"]`,
-                    `form[action*="module=${identifier}"] input[type="submit"]`,
-                    'input[type="submit"][value*="Activar"]',
-                    'input[type="submit"][value*="Enable"]',
-                    'button[data-action="activate"]'
-                ];
-
-                let activated = false;
-
-                for (const selector of activateSelectors) {
-                    const candidates = await this.driver.findElements(By.css(selector));
-                    if (candidates.length > 0) {
-                        console.log(`🖱️ Activando módulo "${identifier}" con selector: ${selector}`);
-                        await candidates[0].click();
-                        await this.driver.sleep(2000);
-                        activated = true;
-                        break;
-                    }
-                }
-
-                if (!activated) {
-                    console.log(`⚠️ No se encontró botón de activación para el módulo "${identifier}"`);
-                } else {
-                    console.log(`✓ Solicitud de activación enviada para módulo "${identifier}"`);
-                }
-            }
-
-            // Volver al dashboard principal
-            await this.driver.get(`${this.config.dolibarr.url}/index.php`);
-            await this.driver.sleep(1000);
-        } catch (error) {
-            console.log('⚠️ Error asegurando módulos:', error.message);
-        }
-    }
-
-    /**
-     * Garantiza que el módulo de proyectos esté activo
-     */
-    async ensureProjectModuleEnabled() {
-        await this.ensureModuleEnabled(['project', 'projet']);
     }
 
     /**
@@ -274,27 +207,14 @@ class BaseTest {
             // Navegar directamente a la página de tareas
             const tasksUrl = `${this.config.dolibarr.url}/projet/tasks.php?leftmenu=tasks`;
             console.log(`🔗 Navegando a: ${tasksUrl}`);
-
+            
             await this.driver.get(tasksUrl);
             await this.driver.sleep(3000);
-
-            // Detectar mensajes de acceso denegado y reintentar tras habilitar módulo
-            const errorContainers = await this.driver.findElements(By.css('.error, .errorbox, .errorboxtext, .errorbg, .errorcell, .errormsg'));
-            for (const container of errorContainers) {
-                const text = (await container.getText()).toLowerCase();
-                if (text.includes('acceso denegado') || text.includes('access denied')) {
-                    console.log('🚫 Acceso denegado detectado. Rehabilitando módulo de proyectos...');
-                    await this.ensureProjectModuleEnabled();
-                    await this.driver.get(tasksUrl);
-                    await this.driver.sleep(3000);
-                    break;
-                }
-            }
-
+            
             // Verificar que estamos en la página correcta
             const currentUrl = await this.driver.getCurrentUrl();
             console.log(`🔗 URL actual: ${currentUrl}`);
-
+            
             if (currentUrl.includes('tasks.php')) {
                 console.log('✓ Navegación a tareas exitosa');
                 return true;
