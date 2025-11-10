@@ -7,6 +7,7 @@ const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const path = require('path');
 const fs = require('fs-extra');
+const { resolveChromeBinaryPath } = require('./config/chrome-helper');
 
 class WorkingOrthogonalTests {
     constructor() {
@@ -74,6 +75,15 @@ class WorkingOrthogonalTests {
         options.addArguments('--no-sandbox');
         options.addArguments('--disable-dev-shm-usage');
         options.addArguments('--window-size=1200,900');
+
+        try {
+            const chromeBinary = await resolveChromeBinaryPath();
+            options.setChromeBinaryPath(chromeBinary);
+            console.log(`🧭 Binario de Chrome utilizado: ${chromeBinary}`);
+        } catch (error) {
+            console.error(`❌ No se pudo resolver el binario de Chrome: ${error.message}`);
+            throw error;
+        }
 
         this.driver = await new Builder()
             .forBrowser('chrome')

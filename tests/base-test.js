@@ -7,6 +7,7 @@ const chrome = require('selenium-webdriver/chrome');
 const fs = require('fs-extra');
 const path = require('path');
 const config = require('../config/config');
+const { resolveChromeBinaryPath } = require('../config/chrome-helper');
 
 class BaseTest {
     constructor() {
@@ -19,16 +20,20 @@ class BaseTest {
      */
     async setupDriver() {
         const options = new chrome.Options();
-        
+
         if (this.config.selenium.headless) {
             options.addArguments('--headless');
         }
-        
+
         options.addArguments(`--window-size=${this.config.selenium.windowSize.width},${this.config.selenium.windowSize.height}`);
         options.addArguments('--disable-web-security');
         options.addArguments('--disable-features=VizDisplayCompositor');
         options.addArguments('--no-sandbox');
         options.addArguments('--disable-dev-shm-usage');
+
+        const chromeBinary = await resolveChromeBinaryPath();
+        options.setChromeBinaryPath(chromeBinary);
+        console.log(`🧭 Usando binario de Chrome: ${chromeBinary}`);
 
         this.driver = await new Builder()
             .forBrowser('chrome')
