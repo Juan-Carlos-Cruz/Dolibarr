@@ -6,16 +6,12 @@ const { Builder, By, until, Key } = require('selenium-webdriver');
 const edge = require('selenium-webdriver/edge');
 const fs = require('fs-extra');
 const path = require('path');
-const { spawn } = require('child_process');
 const config = require('../config/config');
 
 class BaseTest {
     constructor() {
         this.driver = null;
         this.config = config;
-        this.videoProcess = null;
-        this.currentVideoPath = null;
-        this.activeTestId = null;
     }
 
     /**
@@ -65,7 +61,7 @@ class BaseTest {
     async login() {
         try {
             console.log('🔑 Iniciando sesión en Dolibarr...');
-
+            
             // Navegar a la página de login
             await this.driver.get(this.config.dolibarr.url);
             
@@ -167,69 +163,6 @@ class BaseTest {
             await this.takeScreenshot('login_error');
             throw error;
         }
-    }
-
-    /**
-     * Navega a una ruta relativa o URL absoluta
-     */
-    async navigateTo(targetPath) {
-        const destination = targetPath.startsWith('http')
-            ? targetPath
-            : `${this.config.dolibarr.url}${targetPath}`;
-
-        console.log(`🧭 Navegando a ${destination}`);
-        await this.driver.get(destination);
-        await this.driver.sleep(2000);
-        return this.driver.getCurrentUrl();
-    }
-
-    /**
-     * Espera el primer selector disponible de la lista
-     */
-    async waitForSelector(selectors, timeout = 10000) {
-        const selectorList = Array.isArray(selectors) ? selectors : [selectors];
-
-        for (const selector of selectorList) {
-            try {
-                const element = await this.driver.wait(
-                    until.elementLocated(By.css(selector)),
-                    timeout
-                );
-                return element;
-            } catch (error) {
-                console.log(`⌛ Selector no localizado (${selector}), probando siguiente...`);
-            }
-        }
-
-        throw new Error(`No se encontró ninguno de los selectores: ${selectorList.join(', ')}`);
-    }
-
-    /**
-     * Busca un elemento por texto parcial usando XPath
-     */
-    async findElementByText(text, tag = '*', timeout = 10000) {
-        const xpath = `//${tag}[contains(normalize-space(.), "${text}")]`;
-        return this.driver.wait(until.elementLocated(By.xpath(xpath)), timeout);
-    }
-
-    /**
-     * Escribe un valor en un input localizado por selectores múltiples
-     */
-    async typeInField(selectors, value) {
-        const field = await this.waitForSelector(selectors);
-        await field.clear();
-        await field.sendKeys(value);
-        return field;
-    }
-
-    /**
-     * Da click en el primer elemento disponible en la lista de selectores
-     */
-    async clickFirstAvailable(selectors) {
-        const element = await this.waitForSelector(selectors);
-        await this.driver.wait(until.elementIsVisible(element), 5000);
-        await element.click();
-        return element;
     }
 
     /**
@@ -564,9 +497,9 @@ class BaseTest {
      */
     async takeScreenshot(name) {
         try {
-            const screenshotDir = path.resolve(__dirname, '..', this.config.testing.screenshotDirectory);
+            const screenshotDir = path.join(__dirname, '..', 'reports', 'screenshots');
             await fs.ensureDir(screenshotDir);
-
+            
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const filename = `${name}_${timestamp}.png`;
             const filepath = path.join(screenshotDir, filename);
@@ -582,142 +515,9 @@ class BaseTest {
     }
 
     /**
-     * Captura evidencia con prefijo del caso de prueba
-     */
-    async captureEvidence(testId, label) {
-        const sanitizedLabel = label.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const screenshotName = `${testId}_${sanitizedLabel}`;
-        return this.takeScreenshot(screenshotName);
-    }
-
-    /**
-     * Inicia la grabación de video con ffmpeg (si está disponible)
-     */
-    async startVideoRecording(testId) {
-        if (!this.config.testing.recordVideo || this.videoProcess) {
-            return null;
-        }
-
-        try {
-            const videoDir = path.resolve(__dirname, '..', this.config.testing.videoDirectory);
-            await fs.ensureDir(videoDir);
-
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const filename = `${testId}_${timestamp}.${this.config.testing.video.format}`;
-            const filepath = path.join(videoDir, filename);
-
-            const args = this.buildVideoArgs(filepath);
-
-            if (!args) {
-                console.log('⚠️ No se generaron argumentos para ffmpeg. Grabación omitida.');
-                return null;
-            }
-
-            console.log(`🎬 Iniciando grabación de video para ${testId}...`);
-            this.videoProcess = spawn(this.config.testing.video.ffmpegPath, args, {
-                stdio: ['pipe', 'ignore', 'pipe']
-            });
-
-            this.videoProcess.stderr.on('data', () => {});
-
-            this.videoProcess.on('error', (error) => {
-                console.error('⚠️ Error al iniciar ffmpeg:', error.message);
-            });
-
-            this.videoProcess.on('exit', (code) => {
-                if (code !== 0) {
-                    console.log(`⚠️ ffmpeg finalizó con código ${code}`);
-                }
-            });
-
-            this.currentVideoPath = filepath;
-            this.activeTestId = testId;
-            return filepath;
-        } catch (error) {
-            console.error('⚠️ No fue posible iniciar la grabación:', error.message);
-            this.videoProcess = null;
-            this.currentVideoPath = null;
-            return null;
-        }
-    }
-
-    /**
-     * Determina los argumentos de ffmpeg según el sistema operativo
-     */
-    buildVideoArgs(outputPath) {
-        const frameRate = this.config.testing.video.frameRate || 12;
-        const resolution = this.config.testing.video.resolution || this.config.selenium.windowSize;
-
-        if (process.platform === 'win32') {
-            return ['-y', '-f', 'gdigrab', '-framerate', String(frameRate), '-i', 'desktop', outputPath];
-        }
-
-        if (process.platform === 'darwin') {
-            return ['-y', '-f', 'avfoundation', '-framerate', String(frameRate), '-i', '1', outputPath];
-        }
-
-        const display = this.config.testing.video.display || process.env.DISPLAY;
-        if (!display) {
-            console.log('⚠️ DISPLAY no configurado. No se grabará video.');
-            return null;
-        }
-
-        const size = `${resolution.width}x${resolution.height}`;
-        return ['-y', '-video_size', size, '-framerate', String(frameRate), '-f', 'x11grab', '-i', display, outputPath];
-    }
-
-    /**
-     * Detiene la grabación de video si está activa
-     */
-    async stopVideoRecording() {
-        if (!this.videoProcess) {
-            return null;
-        }
-
-        const stopProcess = () => new Promise((resolve) => {
-            this.videoProcess.once('close', () => {
-                const videoPath = this.currentVideoPath;
-                this.videoProcess = null;
-                this.currentVideoPath = null;
-                this.activeTestId = null;
-                resolve(videoPath);
-            });
-
-            try {
-                if (process.platform === 'win32') {
-                    this.videoProcess.stdin.write('q');
-                    this.videoProcess.stdin.end();
-                } else {
-                    this.videoProcess.kill('SIGINT');
-                }
-            } catch (error) {
-                console.error('⚠️ Error al enviar señal a ffmpeg:', error.message);
-            }
-
-            setTimeout(() => {
-                if (this.videoProcess) {
-                    this.videoProcess.kill('SIGKILL');
-                }
-            }, 4000);
-        });
-
-        const videoPath = await stopProcess();
-        if (videoPath) {
-            console.log(`🎬 Video guardado: ${path.basename(videoPath)}`);
-        }
-        return videoPath;
-    }
-
-    /**
      * Cierra el driver
      */
     async tearDown() {
-        try {
-            await this.stopVideoRecording();
-        } catch (error) {
-            console.error('⚠️ Error deteniendo la grabación de video:', error.message);
-        }
-
         if (this.driver) {
             await this.driver.quit();
             console.log('🔚 Driver cerrado correctamente');

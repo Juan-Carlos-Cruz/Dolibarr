@@ -22,23 +22,11 @@ module.exports = {
             height: 768
         }
     },
-
+    
     // Configuración de pruebas
     testing: {
         screenshotOnError: true,
         screenshotDirectory: './reports/screenshots',
-        videoDirectory: './reports/videos',
-        recordVideo: true,
-        video: {
-            format: 'mp4',
-            ffmpegPath: process.env.FFMPEG_PATH || 'ffmpeg',
-            frameRate: 12,
-            display: process.env.DISPLAY || ':99',
-            resolution: {
-                width: 1366,
-                height: 768
-            }
-        },
         retryAttempts: 2,
         delayBetweenTests: 1000
     }
