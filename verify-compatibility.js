@@ -24,7 +24,7 @@ class CompatibilityChecker {
         // Verificaciones principales
         await this.checkNodeVersion();
         await this.checkDockerAvailability(); 
-        await this.checkChromeAvailability();
+        await this.checkEdgeAvailability();
         await this.checkPortAvailability();
         await this.checkFilePermissions();
         await this.checkDiskSpace();
@@ -82,13 +82,17 @@ class CompatibilityChecker {
         });
     }
 
-    async checkChromeAvailability() {
+    async checkEdgeAvailability() {
         return new Promise((resolve) => {
             const commands = [
-                'google-chrome --version',
-                'chromium-browser --version', 
-                'chrome --version',
-                '/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --version'
+                'microsoft-edge --version',
+                'microsoft-edge-stable --version',
+                'msedge --version',
+                'msedgedriver --version',
+                'edge --version',
+                '"C\\\\Program Files (x86)\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe" --version',
+                '"C\\\\Program Files\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe" --version',
+                '/Applications/Microsoft\\ Edge.app/Contents/MacOS/Microsoft\\ Edge --version'
             ];
 
             let found = false;
@@ -99,11 +103,11 @@ class CompatibilityChecker {
                     checkedCount++;
                     if (!error && !found) {
                         found = true;
-                        this.logResult('✅ Chrome/Chromium', stdout.trim(), 'success');
+                        this.logResult('✅ Microsoft Edge', stdout.trim(), 'success');
                     }
-                    
+
                     if (checkedCount === commands.length && !found) {
-                        this.logResult('⚠️ Chrome/Chromium', 'No detectado (Selenium puede funcionar igual)', 'warning');
+                        this.logResult('⚠️ Microsoft Edge', 'No detectado (Selenium puede funcionar igual)', 'warning');
                         resolve();
                     } else if (found && checkedCount === 1) {
                         resolve();

@@ -1,10 +1,10 @@
 /**
  * PRUEBAS ORTOGONALES L9(3⁴) - VERSIÓN FUNCIONAL INMEDIATA
- * Muestra Chrome + Todos los resultados en terminal
+ * Muestra Microsoft Edge + Todos los resultados en terminal
  */
 
 const { Builder, By, until } = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
+const edge = require('selenium-webdriver/edge');
 const path = require('path');
 const fs = require('fs-extra');
 
@@ -66,18 +66,24 @@ class WorkingOrthogonalTests {
     }
 
     async setupDriver() {
-        console.log('🚀 Configurando Chrome (se abrirá AHORA)...');
-        
-        const options = new chrome.Options();
-        // Chrome visible para que veas todo el proceso
+        console.log('🚀 Configurando Microsoft Edge (se abrirá AHORA)...');
+
+        const options = new edge.Options();
+        // Edge visible para que veas todo el proceso
         options.addArguments('--disable-web-security');
         options.addArguments('--no-sandbox');
         options.addArguments('--disable-dev-shm-usage');
         options.addArguments('--window-size=1200,900');
 
+        const driverPath = process.env.MSEDGEDRIVER_PATH || process.env.EDGE_DRIVER_PATH || null;
+        const serviceBuilder = driverPath
+            ? new edge.ServiceBuilder(driverPath)
+            : new edge.ServiceBuilder();
+
         this.driver = await new Builder()
-            .forBrowser('chrome')
-            .setChromeOptions(options)
+            .forBrowser('MicrosoftEdge')
+            .setEdgeOptions(options)
+            .setEdgeService(serviceBuilder)
             .build();
 
         // Timeouts rápidos
@@ -87,7 +93,7 @@ class WorkingOrthogonalTests {
             script: 5000
         });
 
-        console.log('✅ Chrome abierto y listo');
+        console.log('✅ Microsoft Edge abierto y listo');
         return this.driver;
     }
 
@@ -466,7 +472,7 @@ class WorkingOrthogonalTests {
             console.error('❌ Error en ejecución:', error.message);
         } finally {
             if (this.driver) {
-                console.log('\n🔚 Cerrando Chrome...');
+                console.log('\n🔚 Cerrando Microsoft Edge...');
                 await this.driver.quit();
             }
         }

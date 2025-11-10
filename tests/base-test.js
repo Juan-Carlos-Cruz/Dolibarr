@@ -3,7 +3,7 @@
  */
 
 const { Builder, By, until, Key } = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
+const edge = require('selenium-webdriver/edge');
 const fs = require('fs-extra');
 const path = require('path');
 const config = require('../config/config');
@@ -18,21 +18,30 @@ class BaseTest {
      * Configura e inicializa el driver de Selenium
      */
     async setupDriver() {
-        const options = new chrome.Options();
-        
+        const options = new edge.Options();
+
         if (this.config.selenium.headless) {
             options.addArguments('--headless');
         }
-        
+
         options.addArguments(`--window-size=${this.config.selenium.windowSize.width},${this.config.selenium.windowSize.height}`);
         options.addArguments('--disable-web-security');
         options.addArguments('--disable-features=VizDisplayCompositor');
         options.addArguments('--no-sandbox');
         options.addArguments('--disable-dev-shm-usage');
 
+        let serviceBuilder;
+
+        if (this.config.selenium.driverPath) {
+            serviceBuilder = new edge.ServiceBuilder(this.config.selenium.driverPath);
+        } else {
+            serviceBuilder = new edge.ServiceBuilder();
+        }
+
         this.driver = await new Builder()
-            .forBrowser('chrome')
-            .setChromeOptions(options)
+            .forBrowser('MicrosoftEdge')
+            .setEdgeOptions(options)
+            .setEdgeService(serviceBuilder)
             .build();
 
         // Configurar timeouts
