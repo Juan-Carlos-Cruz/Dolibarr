@@ -1,9 +1,0 @@
-{
-    "name": "dolibarr/qa-unit-tests",
-    "require-dev": {
-        "phpunit/phpunit": "^10.5"
-    },
-    "config": {
-        "sort-packages": true
-    }
-}
