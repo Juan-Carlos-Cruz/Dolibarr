@@ -1,33 +1,33 @@
 {
   "name": "dolibarr-orthogonal-testing",
-  "version": "1.0.0",
-  "description": "Pruebas de caja negra con arreglos ortogonales para el módulo de tareas de Dolibarr usando Selenium WebDriver",
+  "version": "1.1.0",
+  "description": "Plan de pruebas de Dolibarr v22 para módulos Products y BOM con Playwright y PHPUnit",
   "main": "index.js",
   "scripts": {
-    "test": "node working-orthogonal-test.js",
-    "start": "node corrected-orthogonal-runner.js",
+    "test": "npm run playwright:test",
+    "playwright:test": "playwright test",
+    "playwright:report": "playwright show-report",
+    "orthogonal:print": "node working-orthogonal-test.js",
+    "orthogonal:export": "node corrected-orthogonal-runner.js",
     "verify": "node verify-compatibility.js",
     "docker-up": "docker-compose up -d",
     "docker-down": "docker-compose down",
     "docker-logs": "docker-compose logs -f",
-    "setup": "npm install && npm run docker-up && echo 'Esperando 30 segundos...' && timeout 30 && npm run verify",
-    "clean": "docker-compose down -v && docker system prune -f"
+    "phpunit:test": "phpunit -c phpunit/phpunit.xml --testdox"
   },
   "keywords": [
-    "selenium",
     "dolibarr",
+    "playwright",
+    "phpunit",
     "orthogonal-arrays",
-    "black-box-testing",
-    "automated-testing"
+    "testing"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "chalk": "^4.1.2",
-    "fs-extra": "^11.1.1",
-    "selenium-webdriver": "^4.15.0"
+    "fs-extra": "^11.1.1"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "@playwright/test": "^1.44.1"
   }
 }
