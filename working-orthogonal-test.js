@@ -5,16 +5,8 @@
 
 const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
-const chromedriver = require('chromedriver');
 const path = require('path');
 const fs = require('fs-extra');
-
-// Configura explícitamente el servicio de ChromeDriver para evitar que Selenium
-// se quede esperando en entornos donde la variable PATH no está inicializada.
-// Esto es especialmente necesario en Windows, donde simplemente instalar el
-// paquete "chromedriver" no basta para que Selenium encuentre el ejecutable.
-const chromeService = new chrome.ServiceBuilder(chromedriver.path).build();
-chrome.setDefaultService(chromeService);
 
 class WorkingOrthogonalTests {
     constructor() {

@@ -10,12 +10,6 @@
 
 const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
-const chromedriver = require('chromedriver');
-
-// Asegura que Selenium utilice el ejecutable correcto de ChromeDriver incluso
-// en entornos Windows donde PATH no incluye el binario descargado por npm.
-const chromeService = new chrome.ServiceBuilder(chromedriver.path).build();
-chrome.setDefaultService(chromeService);
 
 class CorrectedOrthogonalTestRunner {
     constructor() {
