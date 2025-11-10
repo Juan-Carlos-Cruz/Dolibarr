@@ -3,14 +3,40 @@ const fs = require('fs-extra');
 const { spawn, execSync } = require('child_process');
 const config = require('../../config/testConfig');
 
-let ffmpegBinary = process.env.FFMPEG_PATH;
-if (!ffmpegBinary) {
-  try {
-    ffmpegBinary = execSync('which ffmpeg').toString().trim();
-  } catch (error) {
-    ffmpegBinary = 'ffmpeg';
+function resolveFfmpegBinary() {
+  const customPath = process.env.FFMPEG_PATH;
+  if (customPath) {
+    if (fs.existsSync(customPath)) {
+      return customPath;
+    }
+    console.warn(`FFmpeg binary not found at custom path ${customPath}. Falling back to automatic resolution.`);
   }
+
+  const locator = process.platform === 'win32' ? 'where ffmpeg' : 'which ffmpeg';
+  try {
+    const located = execSync(locator, { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .split(/\r?\n/)
+      .find(Boolean);
+    if (located) {
+      return located.trim();
+    }
+  } catch (error) {
+    // ignore and fall through to null
+  }
+
+  try {
+    execSync('ffmpeg -version', { stdio: 'ignore' });
+    return 'ffmpeg';
+  } catch (error) {
+    // ignore and fall through to null
+  }
+
+  return null;
 }
+
+const ffmpegBinary = resolveFfmpegBinary();
+const hasFfmpeg = Boolean(ffmpegBinary);
 
 async function ensureDir(dirPath) {
   await fs.ensureDir(dirPath);
@@ -32,9 +58,13 @@ class VideoRecorder {
     this.caseId = caseId;
     this.process = null;
     this.outputPath = null;
+    this.enabled = hasFfmpeg;
   }
 
   async start() {
+    if (!this.enabled) {
+      throw new Error('FFmpeg binary could not be resolved. Install FFmpeg and ensure it is on PATH (check with "where ffmpeg" en Windows o "which ffmpeg" en Linux/macOS) o define la variable FFMPEG_PATH. Consulta README.md para más detalles.');
+    }
     const dir = config.media.videoDir;
     await ensureDir(dir);
     this.outputPath = path.join(dir, `${this.caseId}.mp4`);

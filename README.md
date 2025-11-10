@@ -7,7 +7,7 @@ Automatización de pruebas funcionales para Dolibarr ERP utilizando Selenium Web
 - Node.js 18+
 - Docker y Docker Compose (para desplegar Dolibarr con la imagen `dolibarr/dolibarr:latest`)
 - Microsoft Edge y su WebDriver (`msedgedriver`) disponible en `PATH` o configurado mediante `MSEDGEDRIVER_PATH` / `EDGE_DRIVER_PATH`
-- `ffmpeg` instalado en el sistema (puedes definir `FFMPEG_PATH` si no está en el `PATH`) y un servidor X11/Xvfb disponible para la captura de vídeo
+- `ffmpeg` instalado en el sistema (puedes definir `FFMPEG_PATH` si no está en el `PATH`) y un servidor X11/Xvfb disponible para la captura de vídeo. En Windows asegúrate de que `ffmpeg.exe` esté en el `PATH` (verificado con `where ffmpeg`) o indica su ruta explícita mediante `FFMPEG_PATH`.
 
 ## Instalación
 
