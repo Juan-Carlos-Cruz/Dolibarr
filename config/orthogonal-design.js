@@ -1,104 +1,117 @@
 /**
- * Diseño de Arreglos Ortogonales para el listado de productos de Dolibarr (HU-017)
- *
- * Metodología:
- *  - Se identificaron cuatro factores críticos mediante análisis AHP siguiendo el plan del informe.
- *  - Para cubrirlos eficientemente se construyó una matriz L9(3^4) que reduce 81 combinaciones posibles a 9 casos.
- *  - Los factores corresponden a filtros disponibles en la UI de Dolibarr para Productos.
+ * Diseño de Arreglos Ortogonales L9(3^4) MEJORADO para Pruebas de Creación de Tareas en Dolibarr
+ * 
+ * OBJETIVO: Probar la funcionalidad de creación de tareas con 4 factores críticos
+ * seleccionados mediante metodología formal multicriterio de 15 campos disponibles.
+ * 
+ * METODOLOGÍA: Análisis AHP (Analytic Hierarchy Process) con criterios ponderados:
+ * - Impacto Funcional (40%), Variabilidad (25%), Complejidad Técnica (20%), Relevancia (15%)
+ * 
+ * FACTORES SELECCIONADOS (Top 4 de 15 campos):
+ * F1: label (Score: 9.25) - Campo obligatorio, crítico para funcionalidad core
+ * F2: task_parent (Score: 9.05) - Jerarquía de tareas, flujos de trabajo  
+ * F3: userid (Score: 8.05) - Asignación de responsabilidades y permisos
+ * F4: progress (Score: 8.25) - Estado fundamental de seguimiento
  */
 
 const orthogonalDesign = {
+    // Definición de factores críticos seleccionados mediante metodología formal
     factors: {
-        F1_VIEW_MODE: {
-            name: 'Modo de vista',
-            description: 'Alterna el layout de la lista de productos',
-            fieldName: 'viewmode',
+        F1_LABEL: {
+            name: "Etiqueta de la Tarea",
+            description: "Campo obligatorio - Título/nombre de la tarea",
+            fieldName: "label",
             levels: {
-                0: { name: 'Lista', value: 'list', description: 'Vista en tabla estándar' },
-                1: { name: 'Rejilla', value: 'card', description: 'Vista de tarjetas' },
-                2: { name: 'Lista compacta', value: 'list_compact', description: 'Tabla con densidad alta' }
+                0: { name: "Corto", value: "Tarea A", description: "1-10 caracteres - Prueba límite mínimo" },
+                1: { name: "Medio", value: "Desarrollo del Sistema ERP", description: "11-50 caracteres - Longitud típica" },
+                2: { name: "Largo", value: "Implementación Completa del Sistema de Gestión Empresarial con Múltiples Módulos Integrados y Funcionalidades Avanzadas", description: "51+ caracteres - Prueba límite máximo" }
             }
         },
-        F2_ORDER: {
-            name: 'Ordenamiento',
-            description: 'Campo + sentido de orden',
-            fieldName: 'sortfield',
+        F2_TASK_PARENT: {
+            name: "Hilo de la Tarea",
+            description: "SELECT desplegable - CAMPO OBLIGATORIO - Jerarquía de tareas",
+            fieldName: "task_parent",
+            fieldType: "select", 
             levels: {
-                0: { name: 'Referencia ASC', value: { field: 'ref', order: 'asc' }, description: 'Orden alfabético por referencia ascendente' },
-                1: { name: 'Etiqueta DESC', value: { field: 'label', order: 'desc' }, description: 'Orden por etiqueta descendente' },
-                2: { name: 'Precio ASC', value: { field: 'price_ttc', order: 'asc' }, description: 'Orden por precio de venta (IVA incluido)' }
+                0: { name: "Vacío", value: "", description: "VACÍO - DEBE FALLAR (campo obligatorio)" },
+                1: { name: "Opción 1", value: "first_available", description: "Seleccionar primera opción disponible - VÁLIDO" },
+                2: { name: "Opción 2", value: "second_available", description: "Seleccionar segunda opción disponible - VÁLIDO" }
             }
         },
-        F3_TAG_FILTER: {
-            name: 'Filtro por etiqueta',
-            description: 'Etiqueta o categoría de producto',
-            fieldName: 'tag',
+        F3_USERID: {
+            name: "Asignado A",
+            description: "SELECT/INPUT - Usuario responsable (vacío, SuperAdmin de lista, o escribir 'superAdmin')",
+            fieldName: "userid",
+            fieldType: "select_or_input",
             levels: {
-                0: { name: 'Sin filtro', value: '', description: 'Todos los productos' },
-                1: { name: 'Etiqueta ACME', value: 'ACME', description: 'Etiqueta usada en los datos maestros' },
-                2: { name: 'Etiqueta Consumibles', value: 'Consumibles', description: 'Etiqueta secundaria de catálogo' }
+                0: { name: "Sin Asignar", value: "", description: "Dejar vacío - Sin responsable asignado" },
+                1: { name: "SuperAdmin Lista", value: "select_superadmin", description: "Seleccionar SuperAdmin de la lista desplegable" },
+                2: { name: "SuperAdmin Escrito", value: "type_superadmin", description: "Escribir 'superAdmin' y seleccionarlo" }
             }
         },
-        F4_PAGE_SIZE: {
-            name: 'Paginación',
-            description: 'Número de filas visibles',
-            fieldName: 'limit',
+        F4_PROGRESS: {
+            name: "Progreso Inicial",
+            description: "SELECT desplegable - Porcentaje en incrementos de 5% (vacío, 0%, 5%, 10%...100%)",
+            fieldName: "progress",
+            fieldType: "select",
             levels: {
-                0: { name: '25 por página', value: 25, description: 'Valor por defecto' },
-                1: { name: '50 por página', value: 50, description: 'Escenario medio' },
-                2: { name: '100 por página', value: 100, description: 'Escenario máximo planificado' }
+                0: { name: "Vacío", value: "", description: "No seleccionar progreso - Campo vacío" },
+                1: { name: "Medio", value: "50", description: "50% - Tarea a mitad de progreso" },
+                2: { name: "Completado", value: "100", description: "100% - Tarea completada" }
             }
         }
     },
 
+    // Matriz Ortogonal L9(3^4) - Arreglo de Taguchi
+    // Cada fila representa un caso de prueba con combinación específica de niveles
     orthogonalMatrix: [
-        [0, 0, 0, 0],
-        [0, 1, 1, 1],
-        [0, 2, 2, 2],
-        [1, 0, 1, 2],
-        [1, 1, 2, 0],
-        [1, 2, 0, 1],
-        [2, 0, 2, 1],
-        [2, 1, 0, 2],
-        [2, 2, 1, 0]
+        [0, 0, 0, 0], // Caso 1
+        [0, 1, 1, 1], // Caso 2
+        [0, 2, 2, 2], // Caso 3
+        [1, 0, 1, 2], // Caso 4
+        [1, 1, 2, 0], // Caso 5
+        [1, 2, 0, 1], // Caso 6
+        [2, 0, 2, 1], // Caso 7
+        [2, 1, 0, 2], // Caso 8
+        [2, 2, 1, 0]  // Caso 9
     ],
 
+    // Generación de casos de prueba basados en la matriz ortogonal
     generateTestCases() {
         return this.orthogonalMatrix.map((combination, index) => {
-            const [viewLevel, orderLevel, tagLevel, pageLevel] = combination;
-            const order = this.factors.F2_ORDER.levels[orderLevel].value;
-
-            return {
-                id: `PF-004-${index + 1}`,
-                iteration: 1,
-                description: `${this.factors.F1_VIEW_MODE.levels[viewLevel].name} / ${this.factors.F2_ORDER.levels[orderLevel].name} / ${this.factors.F3_TAG_FILTER.levels[tagLevel].name} / ${this.factors.F4_PAGE_SIZE.levels[pageLevel].name}`,
+            const testCase = {
+                id: index + 1,
+                name: `TC_${String(index + 1).padStart(2, '0')}`,
+                combination: combination,
                 inputs: {
-                    viewMode: this.factors.F1_VIEW_MODE.levels[viewLevel].value,
-                    sortField: order.field,
-                    sortOrder: order.order,
-                    tag: this.factors.F3_TAG_FILTER.levels[tagLevel].value,
-                    pageSize: this.factors.F4_PAGE_SIZE.levels[pageLevel].value
+                    label: this.factors.F1_LABEL.levels[combination[0]].value,
+                    task_parent: this.factors.F2_TASK_PARENT.levels[combination[1]].value,
+                    userid: this.factors.F3_USERID.levels[combination[2]].value,
+                    progress: this.factors.F4_PROGRESS.levels[combination[3]].value
                 },
                 factorLevels: {
-                    viewMode: this.factors.F1_VIEW_MODE.levels[viewLevel].name,
-                    order: this.factors.F2_ORDER.levels[orderLevel].name,
-                    tag: this.factors.F3_TAG_FILTER.levels[tagLevel].name,
-                    pageSize: this.factors.F4_PAGE_SIZE.levels[pageLevel].name
-                }
+                    label: this.factors.F1_LABEL.levels[combination[0]].name,
+                    taskParent: this.factors.F2_TASK_PARENT.levels[combination[1]].name,
+                    assignedUser: this.factors.F3_USERID.levels[combination[2]].name,
+                    progress: this.factors.F4_PROGRESS.levels[combination[3]].name
+                },
+                description: `${this.factors.F1_LABEL.levels[combination[0]].name} + ${this.factors.F2_TASK_PARENT.levels[combination[1]].name} + ${this.factors.F3_USERID.levels[combination[2]].name} + ${this.factors.F4_PROGRESS.levels[combination[3]].name}`
             };
+            return testCase;
         });
     },
 
+    // Análisis de cobertura
     getCoverageAnalysis() {
-        const totalCombinations = Math.pow(3, 4);
-        const selectedCombinations = this.orthogonalMatrix.length;
+        const totalCombinations = Math.pow(3, 4); // 3^4 = 81
+        const selectedCombinations = this.orthogonalMatrix.length; // 9
         const reduction = ((totalCombinations - selectedCombinations) / totalCombinations * 100).toFixed(1);
-
+        
         return {
             totalPossibleCombinations: totalCombinations,
-            selectedCombinations,
-            reductionPercentage: `${reduction}%`,
-            efficiency: `${selectedCombinations}/${totalCombinations} combinaciones evaluadas`
+            selectedCombinations: selectedCombinations,
+            reductionPercentage: reduction,
+            efficiency: `${selectedCombinations}/${totalCombinations} combinaciones (${reduction}% de reducción)`
         };
     }
 };
