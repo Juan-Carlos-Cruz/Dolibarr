@@ -62,6 +62,9 @@ docker-volumes/
 logs/
 *.log
 
+# Test artifacts
+reports/artifacts/
+
 # Runtime generated files
 selenium-debug.log
 geckodriver.log
