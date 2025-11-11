@@ -3,13 +3,28 @@ const BasePage = require('./BasePage');
 class ProductPricePage extends BasePage {
   constructor(driver) {
     super(driver);
-    this.sellPriceTab = this.byCss('a[href*="&tab=prices"]');
-    this.newPriceButton = this.byCss('a[href*="action=create_price"], button[name="addprice"]');
-    this.priceField = this.byId('price');
-    this.priceMinField = this.byId('price_min');
-    this.vatSelect = this.byCss('select[name="tva_tx"]');
-    this.submitButton = this.byCss('input[type="submit"][name="save"], button[name="save"]');
-    this.historicalTable = this.byCss('#tablelines, table.liste');
+    this.sellPriceTab = this.byCssOr(
+      'a[href*="&tab=prices"]',
+      'a[data-target="tab-prices"]',
+      'button[data-target="prices"]',
+      'a[href*="tab=pric"]'
+    );
+    this.newPriceButton = this.byCssOr(
+      'a[href*="action=create_price"]',
+      'button[name="addprice"]',
+      'button[data-action="add-sell-price"]',
+      'a[data-action="add-price"]'
+    );
+    this.priceField = this.byCssOr('#price', 'input[name="price"]', 'input[data-testid="price-value"]');
+    this.priceMinField = this.byCssOr('#price_min', 'input[name="price_min"]', 'input[name="price_min_ht"]');
+    this.vatSelect = this.byCssOr('select[name="tva_tx"]', 'select[name="vat_rate"]', 'input[name="tva_tx"]');
+    this.submitButton = this.byCssOr(
+      'input[type="submit"][name="save"]',
+      'button[name="save"]',
+      'button[type="submit"][name="save_price"]',
+      'button[data-role="submit-price"]'
+    );
+    this.historicalTable = this.byCssOr('#tablelines', 'table.liste', 'table[data-role="price-history"]');
   }
 
   async openSellPriceTab() {
@@ -25,7 +40,19 @@ class ProductPricePage extends BasePage {
       await this.type(this.priceMinField, priceMin.toString());
     }
     if (vatRate !== undefined) {
-      await this.type(this.vatSelect, `${vatRate}%`);
+      const vatElement = await this.findFirstElement([this.vatSelect]);
+      if (vatElement) {
+        const tagName = await vatElement.getTagName();
+        const formatted = vatRate % 1 === 0 ? `${vatRate}` : vatRate.toString();
+        if (tagName === 'select') {
+          await this.waitForVisible(this.vatSelect);
+          await vatElement.sendKeys(`${formatted}%`);
+          await vatElement.sendKeys(formatted);
+        } else {
+          await vatElement.clear();
+          await vatElement.sendKeys(formatted);
+        }
+      }
     }
     await this.click(this.submitButton);
   }
