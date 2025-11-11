@@ -7,11 +7,20 @@ const edge = require('selenium-webdriver/edge');
 const fs = require('fs-extra');
 const path = require('path');
 const config = require('../config/config');
+const { logFrameworkError } = require('../src/utils/errorLogger');
 
 class BaseTest {
     constructor() {
         this.driver = null;
         this.config = config;
+    }
+
+    async recordError(context, error, metadata = {}) {
+        try {
+            await logFrameworkError(context, error, { component: 'BaseTest', ...metadata });
+        } catch (loggingError) {
+            console.error('⚠️ No se pudo registrar el error en el log de pruebas:', loggingError.message);
+        }
     }
 
     /**
@@ -160,6 +169,7 @@ class BaseTest {
             return true;
         } catch (error) {
             console.error('❌ Error en el login:', error.message);
+            await this.recordError('login', error, { phase: 'authenticate' });
             await this.takeScreenshot('login_error');
             throw error;
         }
@@ -194,6 +204,7 @@ class BaseTest {
             
         } catch (error) {
             console.log('⚠️ Error en configuración automática:', error.message);
+            await this.recordError('completeDolibarrSetup', error);
         }
     }
 
@@ -223,8 +234,9 @@ class BaseTest {
             }
         } catch (error) {
             console.error('❌ Error navegando a tareas:', error.message);
+            await this.recordError('navigateToTasks.primary', error);
             await this.takeScreenshot('navigation_error');
-            
+
             // Intentar navegación alternativa por URL directa
             try {
                 await this.driver.get(`${this.config.dolibarr.url}/projet/tasks/index.php`);
@@ -233,6 +245,7 @@ class BaseTest {
                 return true;
             } catch (altError) {
                 console.error('❌ Error en navegación alternativa:', altError.message);
+                await this.recordError('navigateToTasks.alternative', altError);
                 throw error;
             }
         }
@@ -280,6 +293,7 @@ class BaseTest {
             
         } catch (error) {
             console.error('❌ Error navegando a nueva tarea:', error.message);
+            await this.recordError('navigateToNewTask', error);
             await this.takeScreenshot('new_task_navigation_error');
             throw error;
         }
@@ -422,6 +436,7 @@ class BaseTest {
             return true;
         } catch (error) {
             console.error('❌ Error llenando formulario:', error.message);
+            await this.recordError('fillTaskForm', error, { taskData });
             await this.takeScreenshot('form_fill_error');
             throw error;
         }
@@ -444,6 +459,7 @@ class BaseTest {
             return true;
         } catch (error) {
             console.error('❌ Error enviando formulario:', error.message);
+            await this.recordError('submitTaskForm', error);
             await this.takeScreenshot('form_submit_error');
             throw error;
         }
@@ -484,6 +500,7 @@ class BaseTest {
             };
         } catch (error) {
             console.error('❌ Error validando creación:', error.message);
+            await this.recordError('validateTaskCreation', error, { taskData });
             return {
                 success: false,
                 message: `Error en validación: ${error.message}`,
@@ -511,6 +528,7 @@ class BaseTest {
             return filepath;
         } catch (error) {
             console.error('❌ Error tomando screenshot:', error.message);
+            await this.recordError('takeScreenshot', error, { name });
         }
     }
 

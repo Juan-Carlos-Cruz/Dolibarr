@@ -57,6 +57,13 @@ npm test
 - Puedes personalizar el directorio de salida mediante la variable `SCREENSHOT_DIR`.
 - En caso de error dentro del flujo de prueba, la captura se toma inmediatamente antes de propagar la excepción para facilitar el análisis.
 
+## Registro centralizado de errores
+
+- La suite funcional limpia y vuelve a generar `reports/functional-test-errors.json` en cada ejecución.
+- Cada fallo añade una entrada con el identificador del caso (`PF-XXX`), mensaje, pila y ruta de la captura asociada.
+- Los errores de infraestructura (por ejemplo, fallos al iniciar sesión o cerrar el navegador) también quedan registrados para facilitar la refactorización posterior.
+- Puedes sobrescribir la ubicación del archivo mediante la variable `ERROR_LOG_PATH`.
+
 ## Cobertura de la MRP
 
 | ID     | Descripción resumida                              | Técnica principal |

@@ -2,6 +2,7 @@ let driver;
 const { By, until } = require('selenium-webdriver');
 const { createEdgeDriver } = require('../../src/utils/driverFactory');
 const { runWithArtifacts } = require('../../src/utils/testOrchestrator');
+const { resetErrorLog, logFrameworkError } = require('../../src/utils/errorLogger');
 const LoginPage = require('../../src/pages/LoginPage');
 const HomePage = require('../../src/pages/HomePage');
 const ModuleManagerPage = require('../../src/pages/ModuleManagerPage');
@@ -39,27 +40,41 @@ describe('Dolibarr Functional Regression PF-001 to PF-012', () => {
   let bomPage;
 
   beforeAll(async () => {
-    driver = await createEdgeDriver();
-    loginPage = new LoginPage(driver);
-    homePage = new HomePage(driver);
-    moduleManagerPage = new ModuleManagerPage(driver);
-    productsListPage = new ProductsListPage(driver);
-    productCardPage = new ProductCardPage(driver);
-    productPricePage = new ProductPricePage(driver);
-    productMultipricePage = new ProductMultipricePage(driver);
-    productVariantPage = new ProductVariantPage(driver);
-    productAttachmentPage = new ProductAttachmentPage(driver);
-    inventoryPage = new InventoryPage(driver);
-    stockMovementPage = new StockMovementPage(driver);
-    bomPage = new BomPage(driver);
+    await resetErrorLog({
+      suite: 'Dolibarr Functional Regression PF-001 to PF-012',
+      baseUrl: config.baseUrl
+    });
 
-    await loginPage.login(config.adminUser, config.adminPassword);
-    await driver.wait(until.urlContains('index.php'), config.defaultTimeout);
+    try {
+      driver = await createEdgeDriver();
+      loginPage = new LoginPage(driver);
+      homePage = new HomePage(driver);
+      moduleManagerPage = new ModuleManagerPage(driver);
+      productsListPage = new ProductsListPage(driver);
+      productCardPage = new ProductCardPage(driver);
+      productPricePage = new ProductPricePage(driver);
+      productMultipricePage = new ProductMultipricePage(driver);
+      productVariantPage = new ProductVariantPage(driver);
+      productAttachmentPage = new ProductAttachmentPage(driver);
+      inventoryPage = new InventoryPage(driver);
+      stockMovementPage = new StockMovementPage(driver);
+      bomPage = new BomPage(driver);
+
+      await loginPage.login(config.adminUser, config.adminPassword);
+      await driver.wait(until.urlContains('index.php'), config.defaultTimeout);
+    } catch (error) {
+      await logFrameworkError('suiteSetup', error, { phase: 'beforeAll' });
+      throw error;
+    }
   });
 
   afterAll(async () => {
     if (driver) {
-      await driver.quit();
+      try {
+        await driver.quit();
+      } catch (error) {
+        await logFrameworkError('suiteTeardown', error, { phase: 'driverQuit' });
+      }
     }
   });
 
