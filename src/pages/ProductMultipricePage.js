@@ -3,13 +3,8 @@ const BasePage = require('./BasePage');
 class ProductMultipricePage extends BasePage {
   constructor(driver) {
     super(driver);
-    this.multiPriceTab = this.byCssOr(
-      'a[href*="&tab=multiprices"]',
-      'a[data-target="tab-multiprices"]',
-      'button[data-target="multiprices"]',
-      'a[href*="tab=mprice"]'
-    );
-    this.segmentRows = this.byCssOr('table#tablelines tr', 'table[data-role="multiprices"] tr');
+    this.multiPriceTab = this.byCss('a[href*="&tab=multiprices"]');
+    this.segmentRows = this.byCss('table#tablelines tr');
   }
 
   async open() {
@@ -18,22 +13,12 @@ class ProductMultipricePage extends BasePage {
   }
 
   async setSegmentPrice(segmentIndex, price) {
-    const input = this.byCssOr(
-      `input[name='multiprices[${segmentIndex}][price]']`,
-      `input[name='multiprices[${segmentIndex}][price_ht]']`,
-      `input[data-segment-index='${segmentIndex}']`
-    );
+    const input = this.byCss(`input[name="multiprices[${segmentIndex}][price]"]`);
     await this.type(input, price.toString());
   }
 
   async saveSegmentPrices() {
-    await this.click(
-      this.byCssOr(
-        'input[type="submit"][name="save_multiprices"]',
-        'button[name="save_multiprices"]',
-        'button[data-role="save-multiprices"]'
-      )
-    );
+    await this.click(this.byCss('input[type="submit"][name="save_multiprices"], button[name="save_multiprices"]'));
   }
 }
 

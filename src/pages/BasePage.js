@@ -31,54 +31,8 @@ class BasePage {
     return By.css(selector);
   }
 
-  byCssOr(...selectors) {
-    const normalized = selectors.flat().filter(Boolean);
-    if (!normalized.length) {
-      throw new Error('byCssOr requires at least one selector');
-    }
-    return By.css(normalized.join(', '));
-  }
-
-  byXPath(expression) {
-    return By.xpath(expression);
-  }
-
-  toXPathLiteral(text) {
-    if (text.includes("'")) {
-      if (text.includes('"')) {
-        const parts = text
-          .split("'")
-          .map((part, index, array) => {
-            const literal = `'${part}'`;
-            if (index === array.length - 1) {
-              return literal;
-            }
-            return `${literal}, "'", `;
-          })
-          .join('');
-        return `concat(${parts})`;
-      }
-      return `"${text}"`;
-    }
-    return `'${text}'`;
-  }
-
   byId(id) {
     return By.id(id);
-  }
-
-  async findFirstElement(locators, context = this.driver) {
-    for (const locator of locators) {
-      try {
-        const elements = await context.findElements(locator);
-        if (elements.length > 0) {
-          return elements[0];
-        }
-      } catch (error) {
-        // Ignore locator failures and try the next candidate
-      }
-    }
-    return null;
   }
 }
 
