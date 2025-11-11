@@ -1,0 +1,120 @@
+{
+  "runId": "run-1762821611732",
+  "generatedAt": "2025-11-11T00:40:11.732Z",
+  "metadata": {
+    "suite": "Dolibarr Functional Regression PF-001 to PF-012",
+    "baseUrl": "http://localhost:8080",
+    "runId": "run-1762821611732",
+    "generatedAt": "2025-11-11T00:40:11.732Z"
+  },
+  "errors": [
+    {
+      "type": "test",
+      "caseId": "PF-001",
+      "timestamp": "2025-11-11T00:40:30.359Z",
+      "message": "Waiting for element to be located By(css selector, input#search_module, input[name=\"search_module\"])\nWait timed out after 15084ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, input#search_module, input[name=\"search_module\"])\nWait timed out after 15084ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-001_error_2025-11-11T00-40-30-159Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-002",
+      "timestamp": "2025-11-11T00:40:46.744Z",
+      "message": "Waiting for element to be located By(css selector, *[id=\"label\"])\nWait timed out after 15094ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, *[id=\"label\"])\nWait timed out after 15094ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-002_error_2025-11-11T00-40-46-541Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-003",
+      "timestamp": "2025-11-11T00:41:02.855Z",
+      "message": "Waiting for element to be located By(css selector, *[id=\"label\"])\nWait timed out after 15103ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, *[id=\"label\"])\nWait timed out after 15103ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-003_error_2025-11-11T00-41-02-708Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-004",
+      "timestamp": "2025-11-11T00:41:18.379Z",
+      "message": "Waiting for element to be located By(css selector, select[name=\"search_tag\"])\nWait timed out after 15012ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, select[name=\"search_tag\"])\nWait timed out after 15012ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-004_error_2025-11-11T00-41-18-236Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-005",
+      "timestamp": "2025-11-11T00:41:34.134Z",
+      "message": "Waiting for element to be located By(css selector, a[href*=\"&tab=prices\"])\nWait timed out after 15130ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, a[href*=\"&tab=prices\"])\nWait timed out after 15130ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-005_error_2025-11-11T00-41-34-022Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-006",
+      "timestamp": "2025-11-11T00:41:49.779Z",
+      "message": "Waiting for element to be located By(css selector, a[href*=\"&tab=prices\"])\nWait timed out after 15173ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, a[href*=\"&tab=prices\"])\nWait timed out after 15173ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-006_error_2025-11-11T00-41-49-664Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-007",
+      "timestamp": "2025-11-11T00:42:05.348Z",
+      "message": "Waiting for element to be located By(css selector, a[href*=\"&tab=multiprices\"])\nWait timed out after 15061ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, a[href*=\"&tab=multiprices\"])\nWait timed out after 15061ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-007_error_2025-11-11T00-42-05-172Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-008",
+      "timestamp": "2025-11-11T00:42:20.934Z",
+      "message": "Waiting for element to be located By(css selector, a[href*=\"&tab=variants\"])\nWait timed out after 15177ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, a[href*=\"&tab=variants\"])\nWait timed out after 15177ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-008_error_2025-11-11T00-42-20-795Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-009",
+      "timestamp": "2025-11-11T00:42:36.393Z",
+      "message": "Waiting for element to be located By(css selector, a[href*=\"&tab=documents\"])\nWait timed out after 15040ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, a[href*=\"&tab=documents\"])\nWait timed out after 15040ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-009_error_2025-11-11T00-42-36-287Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-010",
+      "timestamp": "2025-11-11T00:42:36.942Z",
+      "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/Stock|Warehouse|Movimiento/i\u001b[39m\nReceived string:  \u001b[31m\"\"\u001b[39m",
+      "name": "Error",
+      "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/Stock|Warehouse|Movimiento/i\u001b[39m\nReceived string:  \u001b[31m\"\"\u001b[39m\n    at toMatch (C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\tests\\functional\\pf.functional.spec.js:278:20)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runWithArtifacts (C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\src\\utils\\testOrchestrator.js:6:5)\n    at Object.<anonymous> (C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\tests\\functional\\pf.functional.spec.js:274:5)",
+      "screenshotPath": "screenshots\\PF-010_error_2025-11-11T00-42-36-784Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-011",
+      "timestamp": "2025-11-11T00:42:52.586Z",
+      "message": "Waiting for element to be located By(css selector, a[href*=\"/product/stock/movement_card.php?action=create\"], a.button-create)\nWait timed out after 15092ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, a[href*=\"/product/stock/movement_card.php?action=create\"], a.button-create)\nWait timed out after 15092ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-011_error_2025-11-11T00-42-52-351Z.png"
+    },
+    {
+      "type": "test",
+      "caseId": "PF-012",
+      "timestamp": "2025-11-11T00:43:08.158Z",
+      "message": "Waiting for element to be located By(css selector, a[href*=\"/bom/card.php?action=create\"], a.button-create)\nWait timed out after 15203ms",
+      "name": "TimeoutError",
+      "stack": "TimeoutError: Waiting for element to be located By(css selector, a[href*=\"/bom/card.php?action=create\"], a.button-create)\nWait timed out after 15203ms\n    at C:\\Users\\Cerezo2\\Documents\\Nueva carpeta\\dolibarr-22.0\\Dolibarr\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+      "screenshotPath": "screenshots\\PF-012_error_2025-11-11T00-43-08-018Z.png"
+    }
+  ]
+}

@@ -57,11 +57,6 @@ temp-test-file
 # Docker volumes
 docker-volumes/
 
-# Reports legacy
-reports/screenshots/*
-
-# Functional test screenshots
-screenshots/
 
 # Logs
 logs/
