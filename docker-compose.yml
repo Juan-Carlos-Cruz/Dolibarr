@@ -1,4 +1,4 @@
-version: '3'
+version: '3.9'
 services:
   dolibarr:
     image: tuxgasy/dolibarr
@@ -11,8 +11,12 @@ services:
       - DOLI_DB_PASSWORD=dolibarr
       - DOLI_DB_NAME=dolibarr
     depends_on:
-      - db
-      - selenium
+      db:
+        condition: service_started
+      selenium:
+        condition: service_started
+      module-bootstrap:
+        condition: service_completed_successfully
   db:
     image: mariadb:10.6
     container_name: dolibarr_db
@@ -23,6 +27,26 @@ services:
       - MYSQL_PASSWORD=dolibarr
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-udolibarr", "-pdolibarr"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  module-bootstrap:
+    image: mariadb:10.6
+    container_name: dolibarr_module_bootstrap
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "db", "-udolibarr", "-pdolibarr"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    entrypoint: ["/bin/sh", "-c", "until mysqladmin ping -h db -udolibarr -pdolibarr --silent; do sleep 1; done; mysql -h db -udolibarr -pdolibarr dolibarr < /bootstrap/enable-modules.sql"]
+    volumes:
+      - ./docker/init/enable-modules.sql:/bootstrap/enable-modules.sql:ro
+    restart: "no"
   selenium:
     image: selenium/standalone-chrome:118.0
     container_name: dolibarr_selenium

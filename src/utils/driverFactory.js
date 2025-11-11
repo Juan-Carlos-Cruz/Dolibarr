@@ -22,6 +22,10 @@ function buildChromeOptions(settings) {
     options.addArguments('--headless=new');
   }
 
+  if (settings.acceptInsecureCerts) {
+    options.setAcceptInsecureCerts(true);
+  }
+
   options.set('goog:loggingPrefs', { browser: 'ALL', performance: 'ALL' });
   return options;
 }
@@ -40,6 +44,10 @@ function buildEdgeOptions(settings) {
     options.addArguments('--headless');
   }
 
+  if (settings.acceptInsecureCerts) {
+    options.setAcceptInsecureCerts(true);
+  }
+
   options.set('ms:loggingPrefs', { browser: 'ALL' });
   return options;
 }
@@ -54,6 +62,9 @@ function buildFirefoxOptions(settings) {
     if (Number.isFinite(width) && Number.isFinite(height)) {
       options.windowSize({ width, height });
     }
+  }
+  if (settings.acceptInsecureCerts) {
+    options.setAcceptInsecureCerts(true);
   }
   return options;
 }
@@ -152,10 +163,6 @@ async function createWebDriver(overrides = {}) {
       break;
     default:
       throw new Error(`Browser no soportado: ${settings.browser}`);
-  }
-
-  if (settings.acceptInsecureCerts) {
-    builder = builder.setAcceptInsecureCerts(true);
   }
 
   const driver = await builder.build();
