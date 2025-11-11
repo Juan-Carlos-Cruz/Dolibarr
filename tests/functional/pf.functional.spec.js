@@ -1,6 +1,6 @@
 let driver;
 const { By, until } = require('selenium-webdriver');
-const { createEdgeDriver } = require('../../src/utils/driverFactory');
+const { createWebDriver } = require('../../src/utils/driverFactory');
 const { runWithArtifacts } = require('../../src/utils/testOrchestrator');
 const { resetErrorLog, logFrameworkError } = require('../../src/utils/errorLogger');
 const LoginPage = require('../../src/pages/LoginPage');
@@ -46,7 +46,7 @@ describe('Dolibarr Functional Regression PF-001 to PF-012', () => {
     });
 
     try {
-      driver = await createEdgeDriver();
+      driver = await createWebDriver();
       loginPage = new LoginPage(driver);
       homePage = new HomePage(driver);
       moduleManagerPage = new ModuleManagerPage(driver);
